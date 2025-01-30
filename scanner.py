@@ -11,25 +11,25 @@ def get_mtp_devices():
     return mtp_devices.Items()
 
 
-def scan_folder(path, folder, config, destination):
+def scan_folder(path, folder, config, destination, log=print):
     if path in config.ignored_dirs:
         return
 
-    print(f"Scanning: {path}")
+    log(f"Scanning: {path}")
 
     for item in folder.Items():
         if not config.include_dot and item.Name.startswith("."):
             continue
 
         if item.IsFolder:
-            scan_folder(os.path.join(path, item.Name), item.GetFolder, config, destination)
+            scan_folder(os.path.join(path, item.Name), item.GetFolder, config, destination, log)
         else:
             ext = os.path.splitext(item.Name)[1].lower()
             if ext in config.file_types:
                 destination.MoveHere(item) if config.move_files else destination.CopyHere(item)
 
 
-def scan_device(config, location):
+def scan_device(config, location, log):
     mtp_devices = get_mtp_devices()
     destination = shell.Namespace(location)
 
@@ -37,4 +37,4 @@ def scan_device(config, location):
         if device.Name != config.mtp_device:
             continue
 
-        scan_folder("", device.GetFolder, config, destination)
+        scan_folder("", device.GetFolder, config, destination, log)

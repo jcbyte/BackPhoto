@@ -59,7 +59,7 @@ def set_exif_time(exif, time):
     exif["Exif"][piexif.ExifIFD.DateTimeOriginal] = time
 
 
-def set_photo_exif_time(file_path):
+def set_photo_exif_time(file_path, log=print):
     ext = os.path.splitext(file_path)[1].lower()
     if ext not in IMAGE_FORMAT:
         return
@@ -78,14 +78,14 @@ def set_photo_exif_time(file_path):
           set_exif_time(exif, get_os_time(file_path))
           save_exif(exif, file_path)
           
-      print(f"Updated: {os.path.basename(file_path)}")
+      log(f"Updated: {os.path.basename(file_path)}")
 
     except:
-        print(f"Error: {os.path.basename(file_path)}")
+        log(f"Error: {os.path.basename(file_path)}")
 
 
-def set_photos_exif_time(folder_path):
+def set_photos_exif_time(folder_path, log=print):
     for root, dirs, files in os.walk(folder_path):
         for filename in files:
             file_path = os.path.join(root, filename)
-            set_photo_exif_time(file_path)
+            set_photo_exif_time(file_path, log)

@@ -117,16 +117,16 @@ class StartPage(tk.Frame):
 
         # Find and move/copy all photos from MTP device to working folder
         self.log("\nScanning device...",)
-        scanner.scan_device(self.controller.config, folder_path)
+        scanner.scan_device(self.controller.config, folder_path, self.log)
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
             self.log("\nSetting photo time in EXIF...")
-            photo_tools.set_photos_exif_time(folder_path)
+            photo_tools.set_photos_exif_time(folder_path, self.log)
 
         # Upload photos from working folder to remote destination
         self.log("\nUploading...")
-        uploader.upload(folder_path, self.controller.config.remote_destination, now)
+        uploader.upload(folder_path, self.controller.config.remote_destination, now, self.log)
 
         self.log("\nComplete!")
 
