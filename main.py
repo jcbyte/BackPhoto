@@ -43,6 +43,7 @@ class StartPage(tk.Frame):
         self.controller = controller
 
         ## GUI Elements ##
+
         # MTP Device Dropdown
         tk.Label(self, text="MTP Device:").grid(row=0, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
         self.mtp_device_dropdown = ttk.Combobox(self, state="readonly")
@@ -77,11 +78,13 @@ class StartPage(tk.Frame):
         def update_mtp_device():
             self.controller.config.mtp_device = self.mtp_device_dropdown.get()
             self.controller.config.save_config()
+
         self.mtp_device_dropdown.bind("<<ComboboxSelected>>", lambda *_: update_mtp_device())
 
         def update_remote_destination():
             self.controller.config.remote_destination = self.remote_destination_entry.get()
             self.controller.config.save_config()
+
         self.remote_destination_entry.bind("<KeyRelease>", lambda *_: update_remote_destination())
 
     def refresh_mtp_devices(self):
@@ -97,6 +100,8 @@ class OptionsPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
+
+        ## GUI Elements ##
 
         # Ignored Directories Text Box
         tk.Label(self, text="Directories to ignore (each on a newline):").grid(row=0, column=0, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
@@ -121,6 +126,39 @@ class OptionsPage(tk.Frame):
         # Back Button
         self.back_button = tk.Button(self, text="Back", command=lambda: controller.switch_page("StartPage"), width=25)
         self.back_button.grid(row=6, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
+
+        ## Load Initial Values ##
+
+        self.ignored_dirs_text_box.insert("1.0", "\n".join(self.controller.config.ignored_dirs))
+        self.file_ext_text_box.insert("1.0", "\n".join(self.controller.config.file_types))
+        self.set_time_checkbox_var.set(self.controller.config.set_time)
+        self.include_dot_checkbox_var.set(self.controller.config.include_dot)
+
+        ## Config Callbacks ##
+
+        def update_ignored_dirs():
+            self.controller.config.ignored_dirs = self.ignored_dirs_text_box.get("1.0", "end").splitlines()
+            self.controller.config.save_config()
+
+        self.ignored_dirs_text_box.bind("<KeyRelease>", lambda *_: update_ignored_dirs())
+
+        def update_file_types():
+            self.controller.config.file_types = self.file_ext_text_box.get("1.0", "end").splitlines()
+            self.controller.config.save_config()
+
+        self.file_ext_text_box.bind("<KeyRelease>", lambda *_: update_file_types())
+
+        def update_set_time():
+            self.controller.config.set_time = self.set_time_checkbox_var.get()
+            self.controller.config.save_config()
+
+        self.set_time_checkbox_var.trace_add("write", lambda *_: update_set_time())
+
+        def update_include_dot():
+            self.controller.config.include_dot = self.include_dot_checkbox_var.get()
+            self.controller.config.save_config()
+
+        self.include_dot_checkbox_var.trace_add("write", lambda *_: update_include_dot())
 
 
 if __name__ == "__main__":
