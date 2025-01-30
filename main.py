@@ -42,9 +42,10 @@ class StartPage(tk.Frame):
         super().__init__(parent)
         self.controller = controller
 
+        ## GUI Elements ##
         # MTP Device Dropdown
         tk.Label(self, text="MTP Device:").grid(row=0, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
-        self.mtp_device_dropdown = ttk.Combobox(self)
+        self.mtp_device_dropdown = ttk.Combobox(self, state="readonly")
         self.mtp_device_dropdown.grid(row=1, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         # Refresh Button
@@ -64,7 +65,24 @@ class StartPage(tk.Frame):
         self.start_button = tk.Button(self, text="Start", command=self.start, width=25)
         self.start_button.grid(row=5, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
+        ## Load Initial Values ##
+
         self.refresh_mtp_devices()
+
+        self.mtp_device_dropdown.set(self.controller.config.mtp_device)
+        self.remote_destination_entry.insert(0, self.controller.config.remote_destination)
+
+        ## Config Callbacks ##
+
+        def update_mtp_device():
+            self.controller.config.mtp_device = self.mtp_device_dropdown.get()
+            self.controller.config.save_config()
+        self.mtp_device_dropdown.bind("<<ComboboxSelected>>", lambda *_: update_mtp_device())
+
+        def update_remote_destination():
+            self.controller.config.remote_destination = self.remote_destination_entry.get()
+            self.controller.config.save_config()
+        self.remote_destination_entry.bind("<KeyRelease>", lambda *_: update_remote_destination())
 
     def refresh_mtp_devices(self):
         mtp_devices = mtp_util.get_mtp_devices()
