@@ -16,7 +16,9 @@ def upload(local_path, remote_path, last_updated=None):
             remote_file_path = os.path.join(remote_path, str(time.year), MONTH_NAMES[time.month], filename)
             os.makedirs(os.path.dirname(remote_file_path), exist_ok=True)
             shutil.copy2(file_path, remote_file_path)
+            print(f"Uploaded: {os.path.basename(file_path)}")
 
     if last_updated:
         with open(os.path.join(remote_path, "LastUpdated.txt"), "w") as f:
             f.write(last_updated)
+        print(f"Uploaded: LastUpdated.txt")

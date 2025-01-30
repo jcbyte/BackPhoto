@@ -106,14 +106,19 @@ class StartPage(tk.Frame):
         os.mkdir(folder_path)
 
         # Find and move/copy all photos from MTP device to working folder
+        print("\n\033[1mScanning device:\033[0m")
         scanner.scan_device(self.controller.config, folder_path)
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
+            print("\n\033[1mSetting photo time in EXIF:\033[0m")
             photo_tools.set_photos_exif_time(folder_path)
 
         # Upload photos from working folder to remote destination
+        print("\n\033[1mUploading:\033[0m")
         uploader.upload(folder_path, self.controller.config.remote_destination, now)
+
+        print("\n\033[1mComplete!\033[0m")
 
 
 class OptionsPage(tk.Frame):
