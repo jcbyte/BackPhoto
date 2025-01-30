@@ -185,5 +185,5 @@ cython_debug/
 
 
 
-.config.json
+config.json
 .temp_*

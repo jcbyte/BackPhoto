@@ -1,10 +1,11 @@
 import os
 import time
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import ttk
 
 import config_manager
 import scanner
+import uploader
 
 TOP_PADDING = 10
 GROUPED_PADDING = 2
@@ -73,7 +74,7 @@ class StartPage(tk.Frame):
         self.refresh_mtp_devices()
 
         if self.controller.config.mtp_device in self.mtp_device_dropdown["values"]:
-            self.mtp_device_dropdown.set(self.controller.config.mtp_device) 
+            self.mtp_device_dropdown.set(self.controller.config.mtp_device)
         self.remote_destination_entry.insert(0, self.controller.config.remote_destination)
 
         ## Config Callbacks ##
@@ -96,10 +97,10 @@ class StartPage(tk.Frame):
 
     def start(self):
         # todo show output
-        # todo threading to stop
+        # todo threading to allow stop process
 
         # Create temporary working folder
-        now = time.strftime('%Y-%m-%d_%H-%M-%S')
+        now = time.strftime("%Y-%m-%d_%H-%M-%S")
         folder_path = os.path.abspath(f"./.temp_{now}")
         os.mkdir(folder_path)
 
@@ -107,9 +108,9 @@ class StartPage(tk.Frame):
         scanner.scan_device(self.controller.config, folder_path)
 
         # todo modify EXIF if required
-        # todo upload to remote destination
 
-        # messagebox.showinfo("", f"Run")
+        # Upload photos from working folder to remote destination
+        uploader.upload(folder_path, self.controller.config.remote_destination, now)
 
 
 class OptionsPage(tk.Frame):
