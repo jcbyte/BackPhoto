@@ -12,18 +12,22 @@ class BackPhotoApp(tk.Tk):
         self.title("backPhoto")
         self.geometry("800x600")
 
+        self.current_frame = None
         self.frames = {}
         for Page in [StartPage, OptionsPage]:
             page_name = Page.__name__
             frame = Page(parent=self, controller=self)
             self.frames[page_name] = frame
-            frame.place(relx=0.5, rely=0.5, anchor="center")
 
         self.switch_page("StartPage")
 
     def switch_page(self, page_name):
+        if self.current_frame:
+            self.current_frame.place_forget()
+
         frame = self.frames[page_name]
-        frame.tkraise()
+        frame.place(relx=0.5, rely=0, anchor="n")
+        self.current_frame = frame
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
