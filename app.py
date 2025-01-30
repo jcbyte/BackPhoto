@@ -1,7 +1,7 @@
 import os
+import threading
 import time
 import tkinter as tk
-import tkinter.font as tkfont
 from tkinter import ttk
 
 import config_manager
@@ -41,6 +41,9 @@ class BackPhotoApp(tk.Tk):
         frame.place(relx=0.5, rely=0, anchor="n")
         self.current_frame = frame
 
+    def update_gui_thread_safe(self, callback):
+        self.after(0, callback)
+
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -68,7 +71,7 @@ class StartPage(tk.Frame):
         self.options_button.grid(row=4, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         # Start Button
-        self.start_button = tk.Button(self, text="Start", command=self.start, width=25)
+        self.start_button = tk.Button(self, text="Start", command=lambda: threading.Thread(target=self.back_photos).start(), width=25)
         self.start_button.grid(row=5, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         # Log
@@ -101,14 +104,16 @@ class StartPage(tk.Frame):
         self.log_text_box.insert("end", text + "\n")
         self.log_text_box.see("end")
 
+    def log_thread_safe(self, text):
+        self.controller.update_gui_thread_safe(lambda: self.log(text))
+
     def refresh_mtp_devices(self):
         mtp_devices = scanner.get_mtp_devices()
         self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
 
-    def start(self):
-        self.log("Begin!")
-
-        # todo threading
+    def back_photos(self):
+        self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="disabled"))
+        self.log_thread_safe("Begin!")
 
         # Create temporary working folder
         now = time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -116,19 +121,22 @@ class StartPage(tk.Frame):
         os.mkdir(folder_path)
 
         # Find and move/copy all photos from MTP device to working folder
-        self.log("\nScanning device...",)
-        scanner.scan_device(self.controller.config, folder_path, self.log)
+        self.log_thread_safe("\nScanning device...")
+        scanner.scan_device(self.controller.config, folder_path, self.log_thread_safe)
+
+        time.sleep(2)
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
-            self.log("\nSetting photo time in EXIF...")
-            photo_tools.set_photos_exif_time(folder_path, self.log)
+            self.log_thread_safe("\nSetting photo time in EXIF...")
+            photo_tools.set_photos_exif_time(folder_path, self.log_thread_safe)
 
         # Upload photos from working folder to remote destination
-        self.log("\nUploading...")
-        uploader.upload(folder_path, self.controller.config.remote_destination, now, self.log)
+        self.log_thread_safe("\nUploading...")
+        uploader.upload(folder_path, self.controller.config.remote_destination, now, self.log_thread_safe)
 
-        self.log("\nComplete!")
+        self.log_thread_safe("\nComplete!")
+        self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="active"))
 
 
 class OptionsPage(tk.Frame):
