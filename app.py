@@ -1,6 +1,7 @@
 import os
 import time
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import ttk
 
 import config_manager
@@ -70,6 +71,10 @@ class StartPage(tk.Frame):
         self.start_button = tk.Button(self, text="Start", command=self.start, width=25)
         self.start_button.grid(row=5, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
+        # Log
+        self.log_text_box = tk.Text(self, height=10, width=70)
+        self.log_text_box.grid(row=6, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+
         ## Load Initial Values ##
 
         self.refresh_mtp_devices()
@@ -92,13 +97,18 @@ class StartPage(tk.Frame):
 
         self.remote_destination_entry.bind("<KeyRelease>", lambda *_: update_remote_destination())
 
+    def log(self, text):
+        self.log_text_box.insert("end", text + "\n")
+        self.log_text_box.see("end")
+
     def refresh_mtp_devices(self):
         mtp_devices = scanner.get_mtp_devices()
         self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
 
     def start(self):
-        # todo show output
-        # todo threading to allow stop process
+        self.log("Begin!")
+
+        # todo threading
 
         # Create temporary working folder
         now = time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -106,19 +116,19 @@ class StartPage(tk.Frame):
         os.mkdir(folder_path)
 
         # Find and move/copy all photos from MTP device to working folder
-        print("\n\033[1mScanning device:\033[0m")
+        self.log("\nScanning device...",)
         scanner.scan_device(self.controller.config, folder_path)
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
-            print("\n\033[1mSetting photo time in EXIF:\033[0m")
+            self.log("\nSetting photo time in EXIF...")
             photo_tools.set_photos_exif_time(folder_path)
 
         # Upload photos from working folder to remote destination
-        print("\n\033[1mUploading:\033[0m")
+        self.log("\nUploading...")
         uploader.upload(folder_path, self.controller.config.remote_destination, now)
 
-        print("\n\033[1mComplete!\033[0m")
+        self.log("\nComplete!")
 
 
 class OptionsPage(tk.Frame):
