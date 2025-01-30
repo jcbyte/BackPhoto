@@ -12,7 +12,7 @@ def upload(local_path, remote_path, last_updated=None):
     for root, dirs, files in os.walk(local_path):
         for filename in files:
             file_path = os.path.join(root, filename)
-            time = photo_tools.GetOSTime(file_path)
+            time = photo_tools.get_os_time(file_path)
             remote_file_path = os.path.join(remote_path, str(time.year), MONTH_NAMES[time.month], filename)
             os.makedirs(os.path.dirname(remote_file_path), exist_ok=True)
             shutil.copy2(file_path, remote_file_path)

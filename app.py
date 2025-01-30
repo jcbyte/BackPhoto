@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import config_manager
+import photo_tools
 import scanner
 import uploader
 
@@ -107,7 +108,9 @@ class StartPage(tk.Frame):
         # Find and move/copy all photos from MTP device to working folder
         scanner.scan_device(self.controller.config, folder_path)
 
-        # todo modify EXIF if required
+        # Modify photo time in EXIF if required
+        if self.controller.config.set_time:
+            photo_tools.set_photos_exif_time(folder_path)
 
         # Upload photos from working folder to remote destination
         uploader.upload(folder_path, self.controller.config.remote_destination, now)

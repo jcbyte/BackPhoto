@@ -24,8 +24,8 @@ def scan_folder(path, folder, config, destination):
         if item.IsFolder:
             scan_folder(os.path.join(path, item.Name), item.GetFolder, config, destination)
         else:
-            ext = os.path.splitext(item.Name)[1]
-            if ext.lower() in config.file_types:
+            ext = os.path.splitext(item.Name)[1].lower()
+            if ext in config.file_types:
                 destination.MoveHere(item) if config.move_files else destination.CopyHere(item)
 
 
