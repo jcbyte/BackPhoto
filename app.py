@@ -119,6 +119,7 @@ class StartPage(tk.Frame):
     def back_photos(self):
         self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="disabled"))
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(5))
+        self.controller.update_gui_thread_safe(lambda: self.log_text_box.delete("1.0", "end"))
 
         self.log_thread_safe("Begin!")
 
@@ -130,7 +131,7 @@ class StartPage(tk.Frame):
         # Find and move/copy all photos from MTP device to working folder
         self.log_thread_safe("\nScanning device...")
         scanner.scan_device(self.controller.config, folder_path, self.log_thread_safe)
-        self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33))
+        self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
