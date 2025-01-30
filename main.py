@@ -1,10 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import mtp_util
+
 TOP_PADDING = 10
 GROUPED_PADDING = 2
 SEPARATED_PADDING = 15
 GLOBAL_PADX = 5
+
 
 class BackPhotoApp(tk.Tk):
     def __init__(self):
@@ -30,6 +33,7 @@ class BackPhotoApp(tk.Tk):
         frame.place(relx=0.5, rely=0, anchor="n")
         self.current_frame = frame
 
+
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -37,11 +41,11 @@ class StartPage(tk.Frame):
 
         # MTP Device Dropdown
         tk.Label(self, text="MTP Device:").grid(row=0, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
-        self.mtp_device_dropdown = ttk.Combobox(self, values=["Device 1", "Device 2", "Device 3"])
+        self.mtp_device_dropdown = ttk.Combobox(self)
         self.mtp_device_dropdown.grid(row=1, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         # Refresh Button
-        self.mtp_device_refresh_button = tk.Button(self, text="Refresh")
+        self.mtp_device_refresh_button = tk.Button(self, text="Refresh", command=self.refresh_mtp_devices)
         self.mtp_device_refresh_button.grid(row=1, column=1, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         # Remote Destination Entry
@@ -56,6 +60,12 @@ class StartPage(tk.Frame):
         # Start Button
         self.start_button = tk.Button(self, text="Start", command=self.start, width=25)
         self.start_button.grid(row=5, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
+
+        self.refresh_mtp_devices()
+
+    def refresh_mtp_devices(self):
+        mtp_devices = mtp_util.get_mtp_devices()
+        self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
 
     def start(self):
         """Handles the Start button click event."""
