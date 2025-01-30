@@ -59,7 +59,7 @@ class StartPage(tk.Frame):
         self.remote_destination_entry.grid(row=3, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         # Options Button
-        self.options_button = tk.Button(self, text="Options", command=lambda: controller.switch_page("OptionsPage"), width=25)
+        self.options_button = tk.Button(self, text="Options", command=lambda: controller.switch_page("OptionsPage"), width=15)
         self.options_button.grid(row=4, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         # Start Button
@@ -124,7 +124,7 @@ class OptionsPage(tk.Frame):
         self.include_dot_checkbox.grid(row=5, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         # Back Button
-        self.back_button = tk.Button(self, text="Back", command=lambda: controller.switch_page("StartPage"), width=25)
+        self.back_button = tk.Button(self, text="Back", command=lambda: controller.switch_page("StartPage"), width=15)
         self.back_button.grid(row=6, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         ## Load Initial Values ##
