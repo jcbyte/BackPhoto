@@ -74,9 +74,14 @@ class StartPage(tk.Frame):
         self.start_button = tk.Button(self, text="Start", command=lambda: threading.Thread(target=self.back_photos).start(), width=25)
         self.start_button.grid(row=5, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
+        # Progress Bar
+        self.progress_bar_var = tk.IntVar()
+        self.progress_bar = ttk.Progressbar(self, mode="determinate", variable=self.progress_bar_var)
+        self.progress_bar.grid(row=6, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, GROUPED_PADDING), sticky="nsew")
+
         # Log
         self.log_text_box = tk.Text(self, height=10, width=70)
-        self.log_text_box.grid(row=6, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+        self.log_text_box.grid(row=7, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         ## Load Initial Values ##
 
@@ -113,6 +118,8 @@ class StartPage(tk.Frame):
 
     def back_photos(self):
         self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="disabled"))
+        self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(5))
+
         self.log_thread_safe("Begin!")
 
         # Create temporary working folder
@@ -123,17 +130,19 @@ class StartPage(tk.Frame):
         # Find and move/copy all photos from MTP device to working folder
         self.log_thread_safe("\nScanning device...")
         scanner.scan_device(self.controller.config, folder_path, self.log_thread_safe)
-
-        time.sleep(2)
+        self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33))
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
             self.log_thread_safe("\nSetting photo time in EXIF...")
             photo_tools.set_photos_exif_time(folder_path, self.log_thread_safe)
+            self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
+
 
         # Upload photos from working folder to remote destination
         self.log_thread_safe("\nUploading...")
         uploader.upload(folder_path, self.controller.config.remote_destination, now, self.log_thread_safe)
+        self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
         self.log_thread_safe("\nComplete!")
         self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="active"))
