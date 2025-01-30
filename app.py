@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 import config_manager
-import mtp_util
+import scanner
 
 TOP_PADDING = 10
 GROUPED_PADDING = 2
@@ -90,17 +90,21 @@ class StartPage(tk.Frame):
         self.remote_destination_entry.bind("<KeyRelease>", lambda *_: update_remote_destination())
 
     def refresh_mtp_devices(self):
-        mtp_devices = mtp_util.get_mtp_devices()
+        mtp_devices = scanner.get_mtp_devices()
         self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
 
     def start(self):
         # todo show output
+        # todo threading to stop
 
+        # Create temporary working folder
         now = time.strftime('%Y-%m-%d_%H-%M-%S')
         folder_path = os.path.abspath(f"./.temp_{now}")
         os.mkdir(folder_path)
 
-        # todo scan device and extract photos
+        # Find and move/copy all photos from MTP device to working folder
+        scanner.scan_device(self.controller.config, folder_path)
+
         # todo modify EXIF if required
         # todo upload to remote destination
 
@@ -154,7 +158,7 @@ class OptionsPage(tk.Frame):
         ## Config Callbacks ##
 
         def update_ignored_dirs():
-            self.controller.config.ignored_dirs = self.ignored_dirs_text_box.get("1.0", "end").splitlines()
+            self.controller.config.ignored_dirs = [os.path.normpath(path) for path in self.ignored_dirs_text_box.get("1.0", "end").splitlines()]
             self.controller.config.save_config()
 
         self.ignored_dirs_text_box.bind("<KeyRelease>", lambda *_: update_ignored_dirs())
