@@ -1,3 +1,5 @@
+import os
+import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -92,8 +94,17 @@ class StartPage(tk.Frame):
         self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
 
     def start(self):
-        """Handles the Start button click event."""
-        messagebox.showinfo("", f"{self.controller.config.mtp_device}")
+        # todo show output
+
+        now = time.strftime('%Y-%m-%d_%H-%M-%S')
+        folder_path = os.path.abspath(f"./.temp_{now}")
+        os.mkdir(folder_path)
+
+        # todo scan device and extract photos
+        # todo modify EXIF if required
+        # todo upload to remote destination
+
+        # messagebox.showinfo("", f"Run")
 
 
 class OptionsPage(tk.Frame):
@@ -123,9 +134,14 @@ class OptionsPage(tk.Frame):
         self.include_dot_checkbox = tk.Checkbutton(self, text="Include files and folders starting with a '.'", variable=self.include_dot_checkbox_var)
         self.include_dot_checkbox.grid(row=5, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
+        # Move Files Checkbox
+        self.move_files_checkbox_var = tk.BooleanVar()
+        self.move_files_checkbox = tk.Checkbutton(self, text="Move files (instead of copying them)", variable=self.move_files_checkbox_var)
+        self.move_files_checkbox.grid(row=6, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+
         # Back Button
         self.back_button = tk.Button(self, text="Back", command=lambda: controller.switch_page("StartPage"), width=15)
-        self.back_button.grid(row=6, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
+        self.back_button.grid(row=7, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         ## Load Initial Values ##
 
@@ -133,6 +149,7 @@ class OptionsPage(tk.Frame):
         self.file_ext_text_box.insert("1.0", "\n".join(self.controller.config.file_types))
         self.set_time_checkbox_var.set(self.controller.config.set_time)
         self.include_dot_checkbox_var.set(self.controller.config.include_dot)
+        self.move_files_checkbox_var.set(self.controller.config.move_files)
 
         ## Config Callbacks ##
 
@@ -143,7 +160,7 @@ class OptionsPage(tk.Frame):
         self.ignored_dirs_text_box.bind("<KeyRelease>", lambda *_: update_ignored_dirs())
 
         def update_file_types():
-            self.controller.config.file_types = self.file_ext_text_box.get("1.0", "end").splitlines()
+            self.controller.config.file_types = [ext.lower() for ext in self.file_ext_text_box.get("1.0", "end").splitlines()]
             self.controller.config.save_config()
 
         self.file_ext_text_box.bind("<KeyRelease>", lambda *_: update_file_types())
@@ -159,6 +176,12 @@ class OptionsPage(tk.Frame):
             self.controller.config.save_config()
 
         self.include_dot_checkbox_var.trace_add("write", lambda *_: update_include_dot())
+
+        def update_move_files():
+            self.controller.config.move_files = self.move_files_checkbox_var.get()
+            self.controller.config.save_config()
+
+        self.move_files_checkbox_var.trace_add("write", lambda *_: update_move_files())
 
 
 if __name__ == "__main__":

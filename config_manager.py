@@ -11,6 +11,7 @@ class ConfigManager:
         self.file_types = []
         self.set_time = True
         self.include_dot = False
+        self.move_files = True
 
         if self._config_file:
             self.load_config(config_file)
