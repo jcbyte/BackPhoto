@@ -72,7 +72,8 @@ class StartPage(tk.Frame):
 
         self.refresh_mtp_devices()
 
-        self.mtp_device_dropdown.set(self.controller.config.mtp_device)
+        if self.controller.config.mtp_device in self.mtp_device_dropdown["values"]:
+            self.mtp_device_dropdown.set(self.controller.config.mtp_device) 
         self.remote_destination_entry.insert(0, self.controller.config.remote_destination)
 
         ## Config Callbacks ##

@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class ConfigManager:
@@ -22,6 +23,9 @@ class ConfigManager:
 
         if not self._config_file:
             raise ValueError("No config file specified.")
+
+        if not os.path.exists(self._config_file):
+            return
 
         with open(self._config_file, "r") as f:
             config = json.load(f)
