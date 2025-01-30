@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import config_manager
 import mtp_util
 
 TOP_PADDING = 10
@@ -12,6 +13,8 @@ GLOBAL_PADX = 5
 class BackPhotoApp(tk.Tk):
     def __init__(self):
         super().__init__()
+
+        self.config = config_manager.ConfigManager("./config.json")
 
         self.title("backPhoto")
         self.geometry("800x600")
@@ -69,7 +72,7 @@ class StartPage(tk.Frame):
 
     def start(self):
         """Handles the Start button click event."""
-        messagebox.showinfo("", f"{self.mtp_device_dropdown.get()}, {self.remote_destination_entry.get()}")
+        messagebox.showinfo("", f"{self.controller.config.mtp_device}")
 
 
 class OptionsPage(tk.Frame):
