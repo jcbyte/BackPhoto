@@ -10,6 +10,7 @@ IMAGE_FORMAT = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp
 def get_os_time(path):
     return datetime.fromtimestamp(os.path.getmtime(path))
 
+
 def convert_to_jpg(path):
     name, ext = os.path.splitext(path)
 
@@ -30,11 +31,13 @@ def convert_to_jpg(path):
 
     return new_path
 
+
 def load_exif(path):
     try:
         return piexif.load(path)
     except:
         return None
+
 
 def save_exif(exif, path):
     exif_bytes = piexif.dump(exif)
@@ -65,20 +68,20 @@ def set_photo_exif_time(file_path, log=print):
         return
 
     try:
-      exif = load_exif(file_path)
-      if exif:
-          if validate_exif_time(exif):
-              return
-          
-          set_exif_time(exif, get_os_time(file_path))
-          save_exif(exif, file_path)
-      else:
-          file_path = convert_to_jpg(file_path)
-          exif = {"0th": {}, "Exif": {}, "GPS": {}, "Interop": {}, "1st": {}, "thumbnail": None}
-          set_exif_time(exif, get_os_time(file_path))
-          save_exif(exif, file_path)
-          
-      log(f"Updated: {os.path.basename(file_path)}")
+        exif = load_exif(file_path)
+        if exif:
+            if validate_exif_time(exif):
+                return
+
+            set_exif_time(exif, get_os_time(file_path))
+            save_exif(exif, file_path)
+        else:
+            file_path = convert_to_jpg(file_path)
+            exif = {"0th": {}, "Exif": {}, "GPS": {}, "Interop": {}, "1st": {}, "thumbnail": None}
+            set_exif_time(exif, get_os_time(file_path))
+            save_exif(exif, file_path)
+
+        log(f"Updated: {os.path.basename(file_path)}")
 
     except:
         log(f"Error: {os.path.basename(file_path)}")

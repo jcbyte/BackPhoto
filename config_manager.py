@@ -42,10 +42,8 @@ class ConfigManager:
         if not self._config_file:
             raise ValueError("No config file specified.")
 
-        # Get attributes dynamically 
-        config = {
-            key: value for key, value in vars(self).items() if not key.startswith('_')
-        }
+        # Get attributes dynamically
+        config = {key: value for key, value in vars(self).items() if not key.startswith("_")}
 
         with open(self._config_file, "w") as f:
             json.dump(config, f)

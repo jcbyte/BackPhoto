@@ -21,8 +21,11 @@ class BackPhotoApp(tk.Tk):
 
         self.config = config_manager.ConfigManager("./config.json")
 
-        self.title("backPhoto")
+        self.title("BackPhoto")
         self.geometry("800x600")
+
+        icon = tk.PhotoImage(file="icon.png")
+        self.iconphoto(True, icon)
 
         self.current_frame = None
         self.frames = {}
@@ -54,17 +57,17 @@ class StartPage(tk.Frame):
 
         # MTP Device Dropdown
         tk.Label(self, text="MTP Device:").grid(row=0, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
-        self.mtp_device_dropdown = ttk.Combobox(self, state="readonly")
-        self.mtp_device_dropdown.grid(row=1, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+        self.mtp_device_dropdown = ttk.Combobox(self, width=30, state="readonly")
+        self.mtp_device_dropdown.grid(row=1, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="e")
 
         # Refresh Button
-        self.mtp_device_refresh_button = tk.Button(self, text="Refresh", command=self.refresh_mtp_devices)
-        self.mtp_device_refresh_button.grid(row=1, column=1, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+        self.mtp_device_refresh_button = tk.Button(self, width=15, text="Refresh", command=self.refresh_mtp_devices)
+        self.mtp_device_refresh_button.grid(row=1, column=1, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="w")
 
         # Remote Destination Entry
         tk.Label(self, text="Remote destination path:").grid(row=2, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, GROUPED_PADDING))
         self.remote_destination_entry = tk.Entry(self, width=50)
-        self.remote_destination_entry.grid(row=3, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+        self.remote_destination_entry.grid(row=3, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         # Options Button
         self.options_button = tk.Button(self, text="Options", command=lambda: controller.switch_page("OptionsPage"), width=15)
@@ -138,7 +141,6 @@ class StartPage(tk.Frame):
             self.log_thread_safe("\nSetting photo time in EXIF...")
             photo_tools.set_photos_exif_time(folder_path, self.log_thread_safe)
             self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
-
 
         # Upload photos from working folder to remote destination
         self.log_thread_safe("\nUploading...")
