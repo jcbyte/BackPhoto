@@ -76,9 +76,9 @@ def set_photo_exif_time(file_path, log=print):
             set_exif_time(exif, get_os_time(file_path))
             save_exif(exif, file_path)
         else:
-            file_path = convert_to_jpg(file_path)
             exif = {"0th": {}, "Exif": {}, "GPS": {}, "Interop": {}, "1st": {}, "thumbnail": None}
             set_exif_time(exif, get_os_time(file_path))
+            file_path = convert_to_jpg(file_path)
             save_exif(exif, file_path)
 
         log(f"Updated: {os.path.basename(file_path)}")
