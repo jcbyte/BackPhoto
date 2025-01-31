@@ -25,6 +25,8 @@ class ConfigManager:
             raise ValueError("No config file specified.")
 
         if not os.path.exists(self._config_file):
+            self.ignored_dirs = ["Internal storage\\Android", "Internal storage\\storage"]
+            self.file_types = [".jpg", ".jpeg", ".webp", ".png", ".mp4"]
             return
 
         with open(self._config_file, "r") as f:
