@@ -8,11 +8,12 @@ class ConfigManager:
 
         self.mtp_device = None
         self.remote_destination = ""
-        self.ignored_dirs = []
-        self.file_types = []
+        self.ignored_dirs = ["Internal storage\\Android", "Internal storage\\storage"]
+        self.file_types = [".jpg", ".jpeg", ".webp", ".png", ".mp4"]
         self.set_time = True
         self.include_dot = False
         self.move_files = True
+        self.delete_temporary_files = True
 
         if self._config_file:
             self.load_config(config_file)
@@ -25,8 +26,6 @@ class ConfigManager:
             raise ValueError("No config file specified.")
 
         if not os.path.exists(self._config_file):
-            self.ignored_dirs = ["Internal storage\\Android", "Internal storage\\storage"]
-            self.file_types = [".jpg", ".jpeg", ".webp", ".png", ".mp4"]
             return
 
         with open(self._config_file, "r") as f:

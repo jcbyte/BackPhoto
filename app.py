@@ -193,9 +193,14 @@ class OptionsPage(tk.Frame):
         self.checkbox_warning_label = tk.Label(self, text="⚠️ Copying files may cause duplicates when rerun", fg="red", wraplength=350)
         self.checkbox_warning_label.grid(row=7, column=0, padx=GLOBAL_PADX, pady=(GROUPED_PADDING, 0), sticky="nsew")
 
+        # Delete Temporary Files Checkbox
+        self.delete_temporary_files_checkbox_var = tk.BooleanVar()
+        self.delete_temporary_files_checkbox = tk.Checkbutton(self, text="Remove temporary files on completion", variable=self.delete_temporary_files_checkbox_var)
+        self.delete_temporary_files_checkbox.grid(row=8, column=0, padx=GLOBAL_PADX, pady=(SEPARATED_PADDING, SEPARATED_PADDING), sticky="nsew")
+
         # Back Button
         self.back_button = tk.Button(self, text="Back", command=lambda: controller.switch_page("StartPage"), width=15)
-        self.back_button.grid(row=8, column=0, padx=GLOBAL_PADX, pady=(SEPARATED_PADDING, SEPARATED_PADDING))
+        self.back_button.grid(row=9, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         ## Load Initial Values ##
 
@@ -204,6 +209,7 @@ class OptionsPage(tk.Frame):
         self.set_time_checkbox_var.set(self.controller.config.set_time)
         self.include_dot_checkbox_var.set(self.controller.config.include_dot)
         self.move_files_checkbox_var.set(self.controller.config.move_files)
+        self.delete_temporary_files_checkbox_var.set(self.controller.config.delete_temporary_files)
         self.toggle_move_files()
 
         ## Config Callbacks ##
@@ -237,6 +243,12 @@ class OptionsPage(tk.Frame):
             self.controller.config.save_config()
 
         self.move_files_checkbox_var.trace_add("write", lambda *_: update_move_files())
+
+        def update_delete_temporary_files():
+            self.controller.config.delete_temporary_files = self.delete_temporary_files_checkbox_var.get()
+            self.controller.config.save_config()
+
+        self.delete_temporary_files_checkbox_var.trace_add("write", lambda *_: update_delete_temporary_files())
 
 
 if __name__ == "__main__":
