@@ -150,7 +150,7 @@ class StartPage(tk.Frame):
 
         # Remove temporary files if required
         if self.controller.config.delete_temporary_files:
-            self.log_thread_safe("\Removing temporary files...")
+            self.log_thread_safe("\nRemoving temporary files...")
             shutil.rmtree(folder_path)
 
         self.log_thread_safe("\nComplete!")
