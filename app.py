@@ -152,6 +152,12 @@ class StartPage(tk.Frame):
 
 
 class OptionsPage(tk.Frame):
+    def toggle_move_files(self):
+        if self.move_files_checkbox_var.get():
+            self.checkbox_warning_label.grid_remove()
+        else:
+            self.checkbox_warning_label.grid()
+
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -179,13 +185,17 @@ class OptionsPage(tk.Frame):
         self.include_dot_checkbox.grid(row=5, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
         # Move Files Checkbox
+        # This section contains reverse padding as the label can be added and removed dynamically
         self.move_files_checkbox_var = tk.BooleanVar()
-        self.move_files_checkbox = tk.Checkbutton(self, text="Move files (instead of copying them)", variable=self.move_files_checkbox_var)
-        self.move_files_checkbox.grid(row=6, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
+        self.move_files_checkbox = tk.Checkbutton(self, text="Move files (instead of copying them)", variable=self.move_files_checkbox_var, command=self.toggle_move_files)
+        self.move_files_checkbox.grid(row=6, column=0, padx=GLOBAL_PADX, pady=(0, 0), sticky="nsew")
+
+        self.checkbox_warning_label = tk.Label(self, text="⚠️ Copying files may cause duplicates when rerun", fg="red", wraplength=350)
+        self.checkbox_warning_label.grid(row=7, column=0, padx=GLOBAL_PADX, pady=(GROUPED_PADDING, 0), sticky="nsew")
 
         # Back Button
         self.back_button = tk.Button(self, text="Back", command=lambda: controller.switch_page("StartPage"), width=15)
-        self.back_button.grid(row=7, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
+        self.back_button.grid(row=8, column=0, padx=GLOBAL_PADX, pady=(SEPARATED_PADDING, SEPARATED_PADDING))
 
         ## Load Initial Values ##
 
@@ -194,6 +204,7 @@ class OptionsPage(tk.Frame):
         self.set_time_checkbox_var.set(self.controller.config.set_time)
         self.include_dot_checkbox_var.set(self.controller.config.include_dot)
         self.move_files_checkbox_var.set(self.controller.config.move_files)
+        self.toggle_move_files()
 
         ## Config Callbacks ##
 
