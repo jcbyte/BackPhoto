@@ -1,4 +1,5 @@
 import os
+import shutil
 import threading
 import time
 import tkinter as tk
@@ -146,6 +147,11 @@ class StartPage(tk.Frame):
         self.log_thread_safe("\nUploading...")
         uploader.upload(folder_path, self.controller.config.remote_destination, now, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
+
+        # Remove temporary files if required
+        if self.controller.config.delete_temporary_files:
+            self.log_thread_safe("\Removing temporary files...")
+            shutil.rmtree(folder_path)
 
         self.log_thread_safe("\nComplete!")
         self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="active"))
