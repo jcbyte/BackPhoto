@@ -3,6 +3,13 @@ import os
 import win32com.client
 
 shell = win32com.client.Dispatch("Shell.Application")
+TEMP_FOLDER = "temp"
+
+
+def move2(src, dest):
+    """Move a file while preserving metadata."""
+    shutil.copy2(src, dest)
+    os.remove(src)
 
 
 def get_mtp_devices():
