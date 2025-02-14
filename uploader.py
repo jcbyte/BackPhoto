@@ -26,7 +26,7 @@ def upload(local_path: str, remote_path: str, last_updated: Optional[str] = None
 
             # Organise file into year and month folders
             time = photo_tools.get_os_time(file_path)
-            remote_file_path = os.path.join(remote_path, str(time.year), MONTH_NAMES[time.month], filename)
+            remote_file_path = os.path.join(remote_path, str(time.year), MONTH_NAMES[time.month - 1], filename)
 
             # Copy the file with metadata to the organised location in the remote path
             os.makedirs(os.path.dirname(remote_file_path), exist_ok=True)
