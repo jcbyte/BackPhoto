@@ -4,6 +4,7 @@ import threading
 import time
 import tkinter as tk
 from tkinter import ttk
+from typing import Callable
 
 import config_manager
 import photo_tools
@@ -17,17 +18,22 @@ GLOBAL_PADX = 5
 
 
 class BackPhotoApp(tk.Tk):
-    def __init__(self):
+    """Main application class for GUI"""
+
+    def __init__(self) -> None:
         super().__init__()
 
+        # Load config
         self.config = config_manager.ConfigManager("./config.json")
 
+        # Set window properties
         self.title("BackPhoto")
         self.geometry("800x600")
 
         icon = tk.PhotoImage(file="icon.png")
         self.iconphoto(True, icon)
 
+        # Initialise pages/frames
         self.current_frame = None
         self.frames = {}
         for Page in [StartPage, OptionsPage]:
@@ -37,20 +43,34 @@ class BackPhotoApp(tk.Tk):
 
         self.switch_page("StartPage")
 
-    def switch_page(self, page_name):
+    def switch_page(self, page_name: str) -> None:
+        """Switch to a different page.
+
+        Args:
+            page_name (str): Name of the page to switch to, this is the same as its classname.
+        """
+        # Remove the old page/frame
         if self.current_frame:
             self.current_frame.place_forget()
 
+        # Place the new page/frame
         frame = self.frames[page_name]
         frame.place(relx=0.5, rely=0, anchor="n")
         self.current_frame = frame
 
-    def update_gui_thread_safe(self, callback):
+    def update_gui_thread_safe(self, callback: Callable) -> None:
+        """Run GUI function from a separate thread, and ensures thread safety.
+
+        Args:
+            callback (Callable): Function to run on the GUI.
+        """
         self.after(0, callback)
 
 
 class StartPage(tk.Frame):
-    def __init__(self, parent, controller):
+    """Main page where the user selects basic options and begins the process."""
+
+    def __init__(self, parent: tk.Tk, controller: BackPhotoApp):
         super().__init__(parent)
         self.controller = controller
 
@@ -83,7 +103,7 @@ class StartPage(tk.Frame):
         self.progress_bar = ttk.Progressbar(self, mode="determinate", variable=self.progress_bar_var)
         self.progress_bar.grid(row=6, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, GROUPED_PADDING), sticky="nsew")
 
-        # Log
+        # Log Box
         self.log_text_box = tk.Text(self, height=10, width=70)
         self.log_text_box.grid(row=7, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="nsew")
 
@@ -109,18 +129,30 @@ class StartPage(tk.Frame):
 
         self.remote_destination_entry.bind("<KeyRelease>", lambda *_: update_remote_destination())
 
-    def log(self, text):
+    def log(self, text: str) -> None:
+        """Logs messages to the log box.
+
+        Args:
+            text (str): Text to log.
+        """
         self.log_text_box.insert("end", text + "\n")
         self.log_text_box.see("end")
 
-    def log_thread_safe(self, text):
+    def log_thread_safe(self, text: str) -> None:
+        """Logs messages to the log box, in a thread safe manner.
+
+        Args:
+            text (str): Text to log.
+        """
         self.controller.update_gui_thread_safe(lambda: self.log(text))
 
-    def refresh_mtp_devices(self):
+    def refresh_mtp_devices(self) -> None:
+        """Refresh the list of available MTP devices."""
         mtp_devices = scanner.get_mtp_devices()
         self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
 
-    def back_photos(self):
+    def back_photos(self) -> None:
+        """Start the main backup process."""
         self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="disabled"))
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(5))
         self.controller.update_gui_thread_safe(lambda: self.log_text_box.delete("1.0", "end"))
@@ -158,13 +190,9 @@ class StartPage(tk.Frame):
 
 
 class OptionsPage(tk.Frame):
-    def toggle_move_files(self):
-        if self.move_files_checkbox_var.get():
-            self.checkbox_warning_label.grid_remove()
-        else:
-            self.checkbox_warning_label.grid()
+    """Settings page where the user can configure options."""
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent: tk.Tk, controller: BackPhotoApp) -> None:
         super().__init__(parent)
         self.controller = controller
 
@@ -255,6 +283,13 @@ class OptionsPage(tk.Frame):
             self.controller.config.save_config()
 
         self.delete_temporary_files_checkbox_var.trace_add("write", lambda *_: update_delete_temporary_files())
+
+    def toggle_move_files(self):
+        """Show/hide the move files warning"""
+        if self.move_files_checkbox_var.get():
+            self.checkbox_warning_label.grid_remove()
+        else:
+            self.checkbox_warning_label.grid()
 
 
 if __name__ == "__main__":
