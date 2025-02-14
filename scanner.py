@@ -95,7 +95,7 @@ def scan_folder(path: str, folder: any, config: ConfigManager, destination: str,
                 # If there are name conflicts then first copy/move the file into a temporary directory and then move it into the main directory
                 # We must do this as win32com.client cannot copy/move directly to a different filename
                 temp_destination = os.path.join(destination, TEMP_FOLDER)
-                os.mkdir(temp_destination)
+                os.makedirs(temp_destination, exist_ok=True)
                 temp_destination_shell = shell.Namespace(temp_destination)
                 temp_destination_shell.MoveHere(item) if config.move_files else temp_destination_shell.CopyHere(item)
                 move2(os.path.join(temp_destination, item.Name), os.path.join(destination, new_filename))
