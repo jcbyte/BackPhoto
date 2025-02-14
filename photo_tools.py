@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import piexif
 from PIL import Image
@@ -115,12 +115,12 @@ def set_exif_time(exif: Dict[str, Any], time: datetime) -> None:
     exif["Exif"][piexif.ExifIFD.DateTimeOriginal] = time
 
 
-def set_photo_exif_time(file_path: str, log=print) -> None:
+def set_photo_exif_time(file_path: str, log: Optional[Callable[[str], None]] = print) -> None:
     """Sets the EXIF time of an image based on its file modification time.
 
     Args:
         file_path (str): The file path of the image.
-        log (callable, optional): Logging function to display messages.
+        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
     """
     ext = os.path.splitext(file_path)[1].lower()
 
@@ -152,12 +152,12 @@ def set_photo_exif_time(file_path: str, log=print) -> None:
         log(f'Error: "{os.path.basename(file_path)}"')
 
 
-def set_photos_exif_time(folder_path: str, log=print) -> None:
+def set_photos_exif_time(folder_path: str, log: Optional[Callable[[str], None]] = print) -> None:
     """Sets or updates the EXIF time for all images in a folder.
 
     Args:
         folder_path (str): The path to the folder containing images.
-        log (callable, optional): Logging function to display messages.
+        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
     """
     for root, dirs, files in os.walk(folder_path):
         for filename in files:
