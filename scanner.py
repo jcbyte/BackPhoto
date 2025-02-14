@@ -35,7 +35,7 @@ def scan_folder(path, folder, config, destination, log=print):
     if path in config.ignored_dirs:
         return
 
-    log(f"Scanning: {path}")
+    log(f'Scanning: "{path}"')
 
     for item in folder.Items():
         if not config.include_dot and item.Name.startswith("."):
@@ -57,7 +57,7 @@ def scan_folder(path, folder, config, destination, log=print):
                     temp_destination_shell.MoveHere(item) if config.move_files else temp_destination_shell.CopyHere(item)
                     move2(os.path.join(temp_destination, item.Name), os.path.join(destination, new_filename))
 
-                    log(f"Renamed {item.Name} to {new_filename}")
+                    log(f'Renamed: "{item.Name}" to "{new_filename}"')
 
 
 def scan_device(config, location, log=print):

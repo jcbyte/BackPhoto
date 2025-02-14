@@ -81,10 +81,10 @@ def set_photo_exif_time(file_path, log=print):
             file_path = convert_to_jpg(file_path)
             save_exif(exif, file_path)
 
-        log(f"Updated: {os.path.basename(file_path)}")
+        log(f'Updated: "{os.path.basename(file_path)}"')
 
     except:
-        log(f"Error: {os.path.basename(file_path)}")
+        log(f'Error: "{os.path.basename(file_path)}"')
 
 
 def set_photos_exif_time(folder_path, log=print):
