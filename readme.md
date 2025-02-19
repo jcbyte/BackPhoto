@@ -1,8 +1,8 @@
 # <img src="icon.png" height="40"> &nbsp;BackPhoto
 
-Simple app for backing up photos from your **MTP (Android) Device**.
+Windows application for backing up photos from your **MTP (Android) Device**.
 
-This app scans a connected MTP device for specific files (based on their file extension), updates the EXIF information on photos to ensure the correct timestap and then organises them into a local (or remote) folder.
+The app scans a connected MTP device for specific files (based on their file extension), updates the EXIF information on photos to ensure the correct timestap, then organises them into a local (or remote) folder.
 
 ## Installation
 
