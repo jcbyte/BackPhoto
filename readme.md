@@ -30,10 +30,6 @@ To create a standalone executable use `PyInstaller`:
 pyinstaller --onefile --windowed --icon=icon.png app.py
 ```
 
-## Tech Stack
+## Licence
 
-Python, Tkinter
-
-## Authors
-
-- [@jcbyte](https://www.github.com/jcbyte)
+[Apache License 2.0](LICENSE)
