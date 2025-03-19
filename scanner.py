@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 from typing import Callable, Iterator, Optional
 
 # ! win32com.client does not have typing hints
@@ -20,6 +21,18 @@ def move2(src: str, dest: str) -> None:
     """
     shutil.copy2(src, dest)
     os.remove(src)
+
+
+def wait_for_file_exists(path: str, timeout: float = 60, poll: float = 0.01) -> bool:
+    start_time = time.time()
+
+    while not os.path.exists(path):
+        if time.time() - start_time >= timeout:
+            return False
+
+        time.sleep(poll)
+
+    return True
 
 
 def get_mtp_devices() -> any:
@@ -91,13 +104,21 @@ def scan_folder(path: str, folder: any, config: ConfigManager, destination: str,
                 # If there is no name conflicts then copy/move this file into the destination folder
                 destination_shell = shell.Namespace(destination)
                 destination_shell.MoveHere(item) if config.move_files else destination_shell.CopyHere(item)
+                # Shell.Application functions are asynchronous, so wait for the file to actually be moved
+                if not wait_for_file_exists(destination, timeout=5 * 60):
+                    log(f'Issue {'Moving' if config.move_files else 'Coping'} "{item.Name}"')
             else:
                 # If there are name conflicts then first copy/move the file into a temporary directory and then move it into the main directory
                 # We must do this as win32com.client cannot copy/move directly to a different filename
                 temp_destination = os.path.join(destination, TEMP_FOLDER)
                 os.makedirs(temp_destination, exist_ok=True)
+
                 temp_destination_shell = shell.Namespace(temp_destination)
                 temp_destination_shell.MoveHere(item) if config.move_files else temp_destination_shell.CopyHere(item)
+                # Shell.Application functions are asynchronous, so wait for the file to actually be moved
+                if not wait_for_file_exists(temp_destination, timeout=5 * 60):
+                    log(f'Issue {'Moving' if config.move_files else 'Coping'} "{item.Name}"')
+
                 move2(os.path.join(temp_destination, item.Name), os.path.join(destination, new_filename))
 
                 log(f'Renamed: "{item.Name}" to "{new_filename}"')
