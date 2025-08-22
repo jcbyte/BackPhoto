@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 import piexif
 from PIL import Image
@@ -59,14 +59,14 @@ def convert_to_jpg(path: Path) -> Path:
     return new_path
 
 
-def load_exif(path: Path) -> Optional[Dict[str, Any]]:
+def load_exif(path: Path) -> dict[str, Any] | None:
     """Loads the EXIF data from an image file.
 
     Args:
         path (Path): The file path of the image.
 
     Returns:
-        Optional[Dict[str, Any]]: The EXIF data as a dictionary, or None if it cannot be loaded.
+        dict[str, Any] | None: The EXIF data as a dictionary, or None if it cannot be loaded.
     """
     try:
         return piexif.load(str(path))
@@ -74,22 +74,22 @@ def load_exif(path: Path) -> Optional[Dict[str, Any]]:
         return None
 
 
-def save_exif(exif: Dict[str, Any], path: Path) -> None:
+def save_exif(exif: dict[str, Any], path: Path) -> None:
     """Saves EXIF data to an image file.
 
     Args:
-        exif (Dict[str, Any]): The EXIF data to save.
+        exif (dict[str, Any]): The EXIF data to save.
         path (Path): The file path of the image.
     """
     exif_bytes = piexif.dump(exif)
     piexif.insert(exif_bytes, str(path))
 
 
-def get_exif_time(exif: Dict[str, Any]) -> tuple[None | datetime, bool]:
+def get_exif_time(exif: dict[str, Any]) -> tuple[None | datetime, bool]:
     """Gets and validates if the EXIF data contains necessary time fields.
 
     Args:
-        exif (Dict[str, Any]): The EXIF data to use.
+        exif (dict[str, Any]): The EXIF data to use.
 
     Returns:
         tuple[None | datetime, bool]:
@@ -112,11 +112,11 @@ def get_exif_time(exif: Dict[str, Any]) -> tuple[None | datetime, bool]:
     return time, missing_fields
 
 
-def set_exif_time(exif: Dict[str, Any], time: datetime) -> None:
+def set_exif_time(exif: dict[str, Any], time: datetime) -> None:
     """Sets the EXIF time fields to a specified datetime value.
 
     Args:
-        exif (Dict[str, Any]): The EXIF data to update.
+        exif (dict[str, Any]): The EXIF data to update.
         time (datetime): The datetime value to set.
     """
     time_str = time.strftime("%Y:%m:%d %H:%M:%S")
@@ -125,12 +125,12 @@ def set_exif_time(exif: Dict[str, Any], time: datetime) -> None:
     exif["Exif"][piexif.ExifIFD.DateTimeOriginal] = time_str
 
 
-def set_photo_exif_time(file_path: Path, log: Optional[Callable[[str], None]] = print) -> None:
+def set_photo_exif_time(file_path: Path, log: Callable[[str], None] | None = print) -> None:
     """Sets the EXIF time of an image based on its file modification time.
 
     Args:
         file_path (Path): The file path of the image.
-        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
+        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     ext = file_path.suffix.lower()
 
@@ -165,12 +165,12 @@ def set_photo_exif_time(file_path: Path, log: Optional[Callable[[str], None]] = 
             log(f'Error: "{os.path.basename(file_path)}"')
 
 
-def set_photos_exif_time(folder_path: Path, log: Optional[Callable[[str], None]] = print) -> None:
+def set_photos_exif_time(folder_path: Path, log: Callable[[str], None] | None = print) -> None:
     """Sets or updates the EXIF time for all images in a folder.
 
     Args:
         folder_path (Path): The path to the folder containing images.
-        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
+        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     for file_path in folder_path.rglob("*"):
         # skip directories

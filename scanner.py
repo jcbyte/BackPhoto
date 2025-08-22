@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path, PurePosixPath
-from typing import Callable, Optional
+from typing import Callable
 
 from adb import ADB, DevicePath
 from config_manager import ConfigManager
@@ -42,14 +42,14 @@ def get_resolved_path(wanted_filename: Path) -> Path:
     return wanted_filename.parent / new_filename
 
 
-def scan_folder(path: DevicePath, config: ConfigManager, destination: Path, log: Optional[Callable[[str], None]] = print) -> None:
+def scan_folder(path: DevicePath, config: ConfigManager, destination: Path, log: Callable[[str], None] | None = print) -> None:
     """Recursively scan a folder and copy/move files based on the configuration given.
 
     Args:
         path (DevicePath): The devices file path representing this folder.
         config (ConfigManager): The configuration to use when scanning.
         destination (str): The destination folder to place our copied/moved files into.
-        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
+        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     # Skip if we should ignore this path
     if path._path in [PurePosixPath(ignored_path) for ignored_path in config.ignored_dirs]:
@@ -81,14 +81,14 @@ def scan_folder(path: DevicePath, config: ConfigManager, destination: Path, log:
                 log(f'Renamed: "{item.name}" to "{resolved_destination.name}"')
 
 
-def scan_device(config: ConfigManager, adb: ADB, location: Path, log: Optional[Callable[[str], None]] = print):
+def scan_device(config: ConfigManager, adb: ADB, location: Path, log: Callable[[str], None] | None = print):
     """Scan an ADB device and copy/move its files based on the configuration given.
 
     Args:
         config (ConfigManager): The configuration to use when selecting ADB device and scanning.
         adb (ADB): The connected adb server.
         location (Path): The destination folder to place our copied/moved files into.
-        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
+        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     adb_devices = adb.get_devices()
 

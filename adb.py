@@ -1,6 +1,5 @@
 import os
 from pathlib import Path, PurePosixPath
-from typing import Optional
 
 from ppadb.client import Client as AdbClient
 from ppadb.device import Device as AdbDevice
@@ -33,7 +32,7 @@ class Device:
 
 
 class DevicePath:
-    def __init__(self, device: Device, path: str | PurePosixPath, is_dir: Optional[bool] = None) -> None:
+    def __init__(self, device: Device, path: str | PurePosixPath, is_dir: bool | None = None) -> None:
         self.device = device
         self._path = PurePosixPath(path)
         self._is_dir = is_dir

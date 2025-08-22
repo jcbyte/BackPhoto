@@ -1,21 +1,21 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 import photo_tools
 
 MONTH_NAMES = ["01January", "02February", "03March", "04April", "05May", "06June", "07July", "08August", "09September", "10October", "11November", "12December"]
 
 
-def move(src: Path, dst: Path, last_updated: Optional[str] = None, log: Optional[Callable[[str], None]] = print) -> None:
+def move(src: Path, dst: Path, last_updated: str | None = None, log: Callable[[str], None] | None = print) -> None:
     """Moves files from a source directory to a destination directory, organising them by year and month.
 
     Args:
         local_path (Path): The source directory containing the files to upload.
         remote_path (Path): The destination directory for the uploaded files.
-        last_updated (Optional[str], optional): A timestamp to write to a LastUpdated.txt file. Defaults to None.
-        log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
+        last_updated (str, optional): A timestamp to write to a LastUpdated.txt file. Defaults to None.
+        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     # Ensure the remote path exists
     dst.mkdir(parents=True, exist_ok=True)

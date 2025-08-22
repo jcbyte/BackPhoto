@@ -1,16 +1,15 @@
 import json
 import os
-from typing import Optional
 
 
 class ConfigManager:
     """Manages configuration settings by loading and saving from a JSON file."""
 
-    def __init__(self, config_file: Optional[str] = None) -> None:
+    def __init__(self, config_file: str | None = None) -> None:
         """Initializes the ConfigManager with default values and optionally loads a configuration file.
 
         Args:
-            config_file (Optional[str], optional): Optional path to a JSON configuration file. Defaults to None.
+            config_file (str, optional): Optional path to a JSON configuration file. Defaults to None.
         """
         # Record the config file path for saving/loading later
         self._config_file = config_file
@@ -29,11 +28,11 @@ class ConfigManager:
         if self._config_file:
             self.load_config(config_file)
 
-    def load_config(self, config_file: Optional[str] = None) -> None:
+    def load_config(self, config_file: str | None = None) -> None:
         """Loads configuration from a JSON file and updates class attributes.
 
         Args:
-            config_file (Optional[str], optional): Optional path to a JSON configuration file. If not provided, the existing file path is used. Defaults to None.
+            config_file (str, optional): Optional path to a JSON configuration file. If not provided, the existing file path is used. Defaults to None.
 
         Raises:
             ValueError: If no configuration file is specified.
@@ -56,11 +55,11 @@ class ConfigManager:
                 if hasattr(self, key):
                     setattr(self, key, value)
 
-    def save_config(self, config_file: Optional[str] = None) -> None:
+    def save_config(self, config_file: str | None = None) -> None:
         """Saves the current configuration to a JSON file.
 
         Args:
-            config_file (Optional[str], optional): Optional path to a JSON configuration file. If not provided, the existing file path is used. Defaults to None.
+            config_file (str, optional): Optional path to a JSON configuration file. If not provided, the existing file path is used. Defaults to None.
 
         Raises:
             ValueError: If no configuration file is specified.
