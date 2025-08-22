@@ -1,15 +1,13 @@
 import os
 import shutil
-import time
-from typing import Callable, Iterator, Optional
+from pathlib import Path, PurePosixPath
+from typing import Callable, Optional
 
-# ! win32com.client does not have typing hints
-import win32com.client
-
+from adb import ADB, DevicePath
 from config_manager import ConfigManager
 
-shell = win32com.client.Dispatch("Shell.Application")
 TEMP_FOLDER = "temp"
+ROOT_DIR = PurePosixPath("/sdcard")
 
 
 def move2(src: str, dest: str) -> None:
@@ -23,120 +21,82 @@ def move2(src: str, dest: str) -> None:
     os.remove(src)
 
 
-def wait_for_file_exists(path: str, timeout: float = 60, poll: float = 0.01) -> bool:
-    start_time = time.time()
-
-    while not os.path.exists(path):
-        if time.time() - start_time >= timeout:
-            return False
-
-        time.sleep(poll)
-
-    return True
-
-
-def get_mtp_devices() -> any:
-    """Retrieve a list of MTP devices connected to thew windows system.
-
-    Returns:
-        any: List of MTP devices
-    """
-    mtp_devices = shell.Namespace(17)  # 17 corresponds to "This PC" in Windows
-
-    return mtp_devices.Items()
-
-
-def get_resolved_filename(filename: str, directory: str) -> str:
-    """Generate a unique filename if the given filename already exists in the directory.
+def get_resolved_path(wanted_filename: Path) -> Path:
+    """Generate a unique filename at the same path if the given filename already exists in the directory.
 
     Args:
-        filename (str): Wanted filename.
-        directory (str): Directory path.
+        wanted_filename (Path): Wanted filename in directory.
 
     Returns:
-        str: Filename allowed in directory to avoid collisions.
+        Path: Filename allowed in directory to avoid collisions.
     """
-    base_name, ext = os.path.splitext(filename)
+    base_name, ext = wanted_filename.stem, wanted_filename.suffix
     counter = 1
-    new_filename = filename
+    new_filename = wanted_filename.name
 
     # Increase counter until the filename is accepted
-    while os.path.exists(os.path.join(directory, new_filename)):
+    while (wanted_filename.parent / new_filename).exists():
         new_filename = f"{base_name}_{counter}{ext}"
         counter += 1
 
-    return new_filename
+    return wanted_filename.parent / new_filename
 
 
-def scan_folder(path: str, folder: any, config: ConfigManager, destination: str, log: Optional[Callable[[str], None]] = print) -> None:
+def scan_folder(path: DevicePath, config: ConfigManager, destination: Path, log: Optional[Callable[[str], None]] = print) -> None:
     """Recursively scan a folder and copy/move files based on the configuration given.
 
     Args:
-        path (str): The "file path" representing this folder.
-        folder (any): The MTP device folder
+        path (DevicePath): The devices file path representing this folder.
         config (ConfigManager): The configuration to use when scanning.
         destination (str): The destination folder to place our copied/moved files into.
         log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
     """
     # Skip if we should ignore this path
-    if path in config.ignored_dirs:
+    if path._path in [PurePosixPath(ignored_path) for ignored_path in config.ignored_dirs]:
         return
 
-    log(f'Scanning: "{path}"')
+    if log is not None:
+        log(f'Scanning: "{path.path}"')
 
-    # Iterate though every item in the MTP folder
-    for item in folder.Items():
+    # Iterate though every item in the ADB folder
+    for item in path.list():
         # Skip if item starts with '.' and we should ignore these
-        if not config.include_dot and item.Name.startswith("."):
+        if not config.include_dot and item.name.startswith("."):
             continue
 
-        if item.IsFolder:
+        if item.is_dir:
             # If item is a folder then recursively call this function to scan though all files.
-            scan_folder(os.path.join(path, item.Name), item.GetFolder, config, destination, log)
+            scan_folder(item, config, destination, log)
         else:
-            ext = os.path.splitext(item.Name)[1].lower()
+            ext = item.suffix.lower()
             # Skip if we should not copy/move this type of file
             if ext not in config.file_types:
                 continue
 
-            new_filename = get_resolved_filename(item.Name, destination)
-            if item.Name == new_filename:
-                # If there is no name conflicts then copy/move this file into the destination folder
-                destination_shell = shell.Namespace(destination)
-                destination_shell.MoveHere(item) if config.move_files else destination_shell.CopyHere(item)
-                # Shell.Application functions are asynchronous, so wait for the file to actually be moved
-                if not wait_for_file_exists(destination, timeout=5 * 60):
-                    log(f'Issue {'Moving' if config.move_files else 'Coping'} "{item.Name}"')
-            else:
-                # If there are name conflicts then first copy/move the file into a temporary directory and then move it into the main directory
-                # We must do this as win32com.client cannot copy/move directly to a different filename
-                temp_destination = os.path.join(destination, TEMP_FOLDER)
-                os.makedirs(temp_destination, exist_ok=True)
+            # Ensure we have a unique filename
+            resolved_destination = get_resolved_path(destination / item.name)
+            item.cut2(resolved_destination) if config.move_files else item.copy2(resolved_destination)
 
-                temp_destination_shell = shell.Namespace(temp_destination)
-                temp_destination_shell.MoveHere(item) if config.move_files else temp_destination_shell.CopyHere(item)
-                # Shell.Application functions are asynchronous, so wait for the file to actually be moved
-                if not wait_for_file_exists(temp_destination, timeout=5 * 60):
-                    log(f'Issue {'Moving' if config.move_files else 'Coping'} "{item.Name}"')
-
-                move2(os.path.join(temp_destination, item.Name), os.path.join(destination, new_filename))
-
-                log(f'Renamed: "{item.Name}" to "{new_filename}"')
+            if log and item.name != resolved_destination.name:
+                log(f'Renamed: "{item.name}" to "{resolved_destination.name}"')
 
 
-def scan_device(config: ConfigManager, location: str, log: Optional[Callable[[str], None]] = print):
-    """Scan an MTP device and copy/move its files based on the configuration given.
+def scan_device(config: ConfigManager, adb: ADB, location: Path, log: Optional[Callable[[str], None]] = print):
+    """Scan an ADB device and copy/move its files based on the configuration given.
 
     Args:
-        config (ConfigManager): The configuration to use when selecting MTP device and scanning.
-        location (str): The destination folder to place our copied/moved files into.
+        config (ConfigManager): The configuration to use when selecting ADB device and scanning.
+        adb (ADB): The connected adb server.
+        location (Path): The destination folder to place our copied/moved files into.
         log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
     """
-    mtp_devices = get_mtp_devices()
+    adb_devices = adb.get_devices()
 
-    for device in mtp_devices:
-        # Skip until we reach the correct MTP device
-        if device.Name != config.mtp_device:
+    for device in adb_devices:
+        # Skip until we reach the correct ADB device
+        if device.serial != config.adb_device:
             continue
 
-        scan_folder("", device.GetFolder, config, location, log)
+        root = DevicePath(device, ROOT_DIR)
+        scan_folder(root, config, location, log)
+        break

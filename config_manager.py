@@ -16,14 +16,14 @@ class ConfigManager:
         self._config_file = config_file
 
         # Set default values for properties which will be used if no configuration file or the setting does not exist in the config file
-        self.mtp_device = None
-        self.remote_destination = ""
-        self.ignored_dirs = ["Internal storage\\Android", "Internal storage\\storage"]
-        self.file_types = [".jpg", ".jpeg", ".webp", ".png", ".mp4"]
-        self.set_time = True
-        self.include_dot = False
-        self.move_files = True
-        self.delete_temporary_files = True
+        self.adb_device: str | None = None
+        self.destination: str = ""
+        self.ignored_dirs: list[str] = ["/sdcard/Android/", "/sdcard/storage/"]
+        self.file_types: list[str] = [".jpg", ".jpeg", ".webp", ".png", ".mp4"]
+        self.set_time: bool = True
+        self.include_dot: bool = False
+        self.move_files: bool = True
+        self.delete_temporary_files: bool = True
 
         # If a configuration file is specified then load it initially
         if self._config_file:
