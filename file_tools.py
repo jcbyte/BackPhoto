@@ -45,4 +45,4 @@ def move(src: Path, dst: Path, last_updated: Optional[str] = None, log: Optional
             f.write(last_updated)
 
         if log:
-            log(f'Uploaded: "{"LastUpdated.txt"}"')
+            log(f"Set LastUpdated.txt")
