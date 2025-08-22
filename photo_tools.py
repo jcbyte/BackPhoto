@@ -69,7 +69,7 @@ def load_exif(path: Path) -> Optional[Dict[str, Any]]:
         Optional[Dict[str, Any]]: The EXIF data as a dictionary, or None if it cannot be loaded.
     """
     try:
-        return piexif.load(path)
+        return piexif.load(str(path))
     except:
         return None
 
@@ -82,7 +82,7 @@ def save_exif(exif: Dict[str, Any], path: Path) -> None:
         path (Path): The file path of the image.
     """
     exif_bytes = piexif.dump(exif)
-    piexif.insert(exif_bytes, path)
+    piexif.insert(exif_bytes, str(path))
 
 
 def get_exif_time(exif: Dict[str, Any]) -> tuple[None | datetime, bool]:

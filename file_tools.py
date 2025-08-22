@@ -24,8 +24,10 @@ def move(src: Path, dst: Path, last_updated: Optional[str] = None, log: Optional
     for file_path in src.rglob("*"):  # recursively find all files
         if file_path.is_file():
             # Organise file into year and month folders
-            # todo should this be exif data instead of os time?
-            time = photo_tools.get_os_time(file_path)
+            photo_exif = photo_tools.load_exif(file_path)
+            exif_time = photo_tools.get_exif_time(photo_exif)[0] if photo_exif else None
+            time = exif_time or photo_tools.get_os_time(file_path)
+
             dst_path = dst / str(time.year) / MONTH_NAMES[time.month - 1] / file_path.name
 
             # Ensure the parent directories exist
