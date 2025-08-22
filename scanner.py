@@ -30,7 +30,7 @@ def get_resolved_path(wanted_filename: Path) -> Path:
     Returns:
         Path: Filename allowed in directory to avoid collisions.
     """
-    base_name, ext = os.path.splitext(wanted_filename.name)
+    base_name, ext = wanted_filename.stem, wanted_filename.suffix
     counter = 1
     new_filename = wanted_filename.name
 
@@ -68,7 +68,7 @@ def scan_folder(path: DevicePath, config: ConfigManager, destination: Path, log:
             # If item is a folder then recursively call this function to scan though all files.
             scan_folder(item, config, destination, log)
         else:
-            ext = os.path.splitext(item.name)[1].lower()
+            ext = item.suffix.lower()
             # Skip if we should not copy/move this type of file
             if ext not in config.file_types:
                 continue

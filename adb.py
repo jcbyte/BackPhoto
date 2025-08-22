@@ -39,6 +39,10 @@ class DevicePath:
         return self._path.name
 
     @property
+    def suffix(self) -> str:
+        return self._path.suffix
+
+    @property
     def path(self) -> str:
         return self._path.as_posix()
 

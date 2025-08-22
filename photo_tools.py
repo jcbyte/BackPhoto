@@ -33,8 +33,7 @@ def convert_to_jpg(path: Path) -> Path:
     Raises:
         ValueError: If the image contains transparency.
     """
-    # todo replace path.splitext with path.stem and path.suffix
-    name, ext = os.path.splitext(path.name)
+    name, ext = path.stem, path.suffix
 
     # Check that the file is not already a JPG
     if ext.lower() in [".jpg", ".jpeg"]:
@@ -133,7 +132,7 @@ def set_photo_exif_time(file_path: Path, log: Optional[Callable[[str], None]] = 
         file_path (Path): The file path of the image.
         log (Optional[Callable[[str], None]], optional): Logging function to display messages. Defaults to print.
     """
-    ext = os.path.splitext(file_path)[1].lower()
+    ext = file_path.suffix.lower()
 
     # Check file is an image
     if ext not in IMAGE_FORMAT:
