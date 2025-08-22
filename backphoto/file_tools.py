@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from typing import Callable
 
-import photo_tools
+from .photo_tools import get_exif_time, get_os_time, load_exif
 
 MONTH_NAMES = ["01January", "02February", "03March", "04April", "05May", "06June", "07July", "08August", "09September", "10October", "11November", "12December"]
 
@@ -24,9 +24,9 @@ def move(src: Path, dst: Path, last_updated: str | None = None, log: Callable[[s
     for file_path in src.rglob("*"):  # recursively find all files
         if file_path.is_file():
             # Organise file into year and month folders
-            photo_exif = photo_tools.load_exif(file_path)
-            exif_time = photo_tools.get_exif_time(photo_exif)[0] if photo_exif else None
-            time = exif_time or photo_tools.get_os_time(file_path)
+            photo_exif = load_exif(file_path)
+            exif_time = get_exif_time(photo_exif)[0] if photo_exif else None
+            time = exif_time or get_os_time(file_path)
 
             dst_path = dst / str(time.year) / MONTH_NAMES[time.month - 1] / file_path.name
 

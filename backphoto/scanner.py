@@ -3,8 +3,8 @@ import shutil
 from pathlib import Path, PurePosixPath
 from typing import Callable
 
-from adb import ADB, DevicePath
-from config_manager import ConfigManager
+from .adb import ADB, DevicePath
+from .config_manager import ConfigManager
 
 TEMP_FOLDER = "temp"
 ROOT_DIR = PurePosixPath("/sdcard")

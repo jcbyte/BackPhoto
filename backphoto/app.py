@@ -7,11 +7,11 @@ from pathlib import Path
 from tkinter import ttk
 from typing import Callable
 
-import adb
-import config_manager
-import file_tools
-import photo_tools
-import scanner
+from .adb import ADB
+from .config_manager import ConfigManager
+from .file_tools import move
+from .photo_tools import set_photos_exif_time
+from .scanner import scan_device
 
 TOP_PADDING = 10
 GROUPED_PADDING = 2
@@ -26,10 +26,10 @@ class BackPhotoApp(tk.Tk):
         super().__init__()
 
         # Load config
-        self.config = config_manager.ConfigManager("./config.json")
+        self.config = ConfigManager("./config.json")
 
         # Connect to ADB server
-        self.adb = adb.ADB()
+        self.adb = ADB()
 
         # Set window properties
         self.title("BackPhoto")
@@ -178,18 +178,18 @@ class StartPage(tk.Frame):
 
         # Find and move/copy all photos from ADB device to working folder
         self.log_thread_safe("\nScanning device...")
-        scanner.scan_device(self.controller.config, self.controller.adb, folder_path, self.log_thread_safe)
+        scan_device(self.controller.config, self.controller.adb, folder_path, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
             self.log_thread_safe("\nSetting photo time in EXIF...")
-            photo_tools.set_photos_exif_time(folder_path, self.log_thread_safe)
+            set_photos_exif_time(folder_path, self.log_thread_safe)
             self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
 
         # Move photos from working folder to destination
         self.log_thread_safe("\nMoving to destination...")
-        file_tools.move(folder_path, Path(self.controller.config.destination), now, self.log_thread_safe)
+        move(folder_path, Path(self.controller.config.destination), now, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
         # Remove temporary files if required
