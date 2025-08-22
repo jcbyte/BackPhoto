@@ -3,7 +3,7 @@ import shutil
 import threading
 import time
 import tkinter as tk
-from pathlib import Path, PurePath
+from pathlib import Path
 from tkinter import ttk
 from typing import Callable
 
@@ -116,15 +116,21 @@ class StartPage(tk.Frame):
 
         self.refresh_adb_devices()
 
-        if self.controller.config.adb_device in self.adb_device_dropdown["values"]:
-            self.adb_device_dropdown.set(self.controller.config.adb_device)
+        for name, serial in self.device_map.items():
+            if serial == self.controller.config.adb_device:
+                self.adb_device_dropdown.set(name)
+                break
+
         self.destination_entry.insert(0, self.controller.config.destination)
 
         ## Config Callbacks ##
 
         def update_adb_device():
-            self.controller.config.adb_device = self.adb_device_dropdown.get()
-            self.controller.config.save_config()
+            device_friendly_name = self.adb_device_dropdown.get()
+            device_serial = self.device_map.get(device_friendly_name)
+            if device_serial:
+                self.controller.config.adb_device = device_serial
+                self.controller.config.save_config()
 
         self.adb_device_dropdown.bind("<<ComboboxSelected>>", lambda *_: update_adb_device())
 
@@ -154,8 +160,8 @@ class StartPage(tk.Frame):
     def refresh_adb_devices(self) -> None:
         """Refresh the list of available ADB devices."""
         adb_devices = self.controller.adb.get_devices()
-        # todo may need to store serial here?
-        self.adb_device_dropdown["values"] = [device.friendly_name for device in adb_devices]
+        self.device_map = {device.friendly_name: device.serial for device in adb_devices}
+        self.adb_device_dropdown["values"] = list(self.device_map.keys())
 
     def back_photos(self) -> None:
         """Start the main backup process."""
@@ -255,8 +261,7 @@ class OptionsPage(tk.Frame):
         ## Config Callbacks ##
 
         def update_ignored_dirs():
-            # todo update this for pure posix paths
-            self.controller.config.ignored_dirs = [os.path.normpath(path) for path in self.ignored_dirs_text_box.get("1.0", "end").splitlines()]
+            self.controller.config.ignored_dirs = [Path(path).as_posix() for path in self.ignored_dirs_text_box.get("1.0", "end").splitlines()]
             self.controller.config.save_config()
 
         self.ignored_dirs_text_box.bind("<KeyRelease>", lambda *_: update_ignored_dirs())

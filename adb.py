@@ -11,6 +11,10 @@ class Device:
         self.device = device
 
     @property
+    def serial(self) -> str:
+        return self.device.serial
+
+    @property
     def friendly_name(self) -> str:
         """Get a user friendly name for the connected device."""
 

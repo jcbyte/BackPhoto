@@ -94,8 +94,7 @@ def scan_device(config: ConfigManager, adb: ADB, location: Path, log: Optional[C
 
     for device in adb_devices:
         # Skip until we reach the correct ADB device
-        # todo we should use serial here not its "friendly name"
-        if device.friendly_name != config.adb_device:
+        if device.serial != config.adb_device:
             continue
 
         root = DevicePath(device, ROOT_DIR)
