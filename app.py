@@ -9,9 +9,9 @@ from typing import Callable
 
 import adb
 import config_manager
+import file_tools
 import photo_tools
 import scanner
-import uploader
 
 TOP_PADDING = 10
 GROUPED_PADDING = 2
@@ -175,16 +175,15 @@ class StartPage(tk.Frame):
         scanner.scan_device(self.controller.config, self.controller.adb, folder_path, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
-        exit()  # ! i am going through code and i am HERE
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
             self.log_thread_safe("\nSetting photo time in EXIF...")
             photo_tools.set_photos_exif_time(folder_path, self.log_thread_safe)
             self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
 
-        # Upload photos from working folder to remote destination
-        self.log_thread_safe("\nUploading...")
-        uploader.upload(folder_path, self.controller.config.destination, now, self.log_thread_safe)
+        # Move photos from working folder to destination
+        self.log_thread_safe("\nMoving to destination...")
+        file_tools.move(folder_path, Path(self.controller.config.destination), now, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
         # Remove temporary files if required
