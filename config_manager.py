@@ -18,7 +18,7 @@ class ConfigManager:
         # Set default values for properties which will be used if no configuration file or the setting does not exist in the config file
         self.adb_device: str | None = None
         self.destination: str = ""
-        self.ignored_dirs: list[str] = ["Internal storage\\Android", "Internal storage\\storage"]
+        self.ignored_dirs: list[str] = ["/sdcard/Android/", "/sdcard/storage/"]
         self.file_types: list[str] = [".jpg", ".jpeg", ".webp", ".png", ".mp4"]
         self.set_time: bool = True
         self.include_dot: bool = False

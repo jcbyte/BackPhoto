@@ -35,6 +35,10 @@ class DevicePath:
         self._is_dir = is_dir
 
     @property
+    def name(self) -> str:
+        return self._path.name
+
+    @property
     def path(self) -> str:
         return self._path.as_posix()
 

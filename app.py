@@ -3,6 +3,7 @@ import shutil
 import threading
 import time
 import tkinter as tk
+from pathlib import Path, PurePath
 from tkinter import ttk
 from typing import Callable
 
@@ -166,14 +167,15 @@ class StartPage(tk.Frame):
 
         # Create temporary working folder
         now = time.strftime("%Y-%m-%d_%H-%M-%S")
-        folder_path = os.path.abspath(f"./.temp_{now}")
+        folder_path = Path(".", f".temp_{now}")
         os.mkdir(folder_path)
 
         # Find and move/copy all photos from ADB device to working folder
         self.log_thread_safe("\nScanning device...")
-        scanner.scan_device(self.controller.config, folder_path, self.log_thread_safe)
+        scanner.scan_device(self.controller.config, self.controller.adb, folder_path, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
+        exit()  # ! i am going through code and i am HERE
         # Modify photo time in EXIF if required
         if self.controller.config.set_time:
             self.log_thread_safe("\nSetting photo time in EXIF...")
@@ -254,6 +256,7 @@ class OptionsPage(tk.Frame):
         ## Config Callbacks ##
 
         def update_ignored_dirs():
+            # todo update this for pure posix paths
             self.controller.config.ignored_dirs = [os.path.normpath(path) for path in self.ignored_dirs_text_box.get("1.0", "end").splitlines()]
             self.controller.config.save_config()
 
