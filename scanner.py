@@ -136,7 +136,7 @@ def scan_device(config: ConfigManager, location: str, log: Optional[Callable[[st
 
     for device in mtp_devices:
         # Skip until we reach the correct MTP device
-        if device.Name != config.mtp_device:
+        if device.Name != config.adb_device:
             continue
 
         scan_folder("", device.GetFolder, config, location, log)

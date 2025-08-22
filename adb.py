@@ -112,10 +112,3 @@ class ADB:
 
     def get_devices(self) -> list[Device]:
         return [Device(adbDevice) for adbDevice in self.client.devices()]
-
-
-d = ADB().get_devices()[0]
-a = DevicePath(d, "/sdcard/")
-print(a.is_dir)
-d = a.list()
-print(d[0])

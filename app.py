@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
+import adb
 import config_manager
 import photo_tools
 import scanner
@@ -25,6 +26,9 @@ class BackPhotoApp(tk.Tk):
 
         # Load config
         self.config = config_manager.ConfigManager("./config.json")
+
+        # Connect to ADB server
+        self.adb = adb.ADB()
 
         # Set window properties
         self.title("BackPhoto")
@@ -76,19 +80,19 @@ class StartPage(tk.Frame):
 
         ## GUI Elements ##
 
-        # MTP Device Dropdown
-        tk.Label(self, text="MTP Device:").grid(row=0, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
-        self.mtp_device_dropdown = ttk.Combobox(self, width=30, state="readonly")
-        self.mtp_device_dropdown.grid(row=1, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="e")
+        # ADB Device Dropdown
+        tk.Label(self, text="ADB Device:").grid(row=0, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(TOP_PADDING, GROUPED_PADDING))
+        self.adb_device_dropdown = ttk.Combobox(self, width=30, state="readonly")
+        self.adb_device_dropdown.grid(row=1, column=0, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="e")
 
         # Refresh Button
-        self.mtp_device_refresh_button = tk.Button(self, width=15, text="Refresh", command=self.refresh_mtp_devices)
-        self.mtp_device_refresh_button.grid(row=1, column=1, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="w")
+        self.adb_device_refresh_button = tk.Button(self, width=15, text="Refresh", command=self.refresh_adb_devices)
+        self.adb_device_refresh_button.grid(row=1, column=1, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING), sticky="w")
 
-        # Remote Destination Entry
-        tk.Label(self, text="Remote destination path:").grid(row=2, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, GROUPED_PADDING))
-        self.remote_destination_entry = tk.Entry(self, width=50)
-        self.remote_destination_entry.grid(row=3, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
+        # Destination Entry
+        tk.Label(self, text="Destination path:").grid(row=2, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, GROUPED_PADDING))
+        self.destination_entry = tk.Entry(self, width=50)
+        self.destination_entry.grid(row=3, column=0, columnspan=2, padx=GLOBAL_PADX, pady=(0, SEPARATED_PADDING))
 
         # Options Button
         self.options_button = tk.Button(self, text="Options", command=lambda: controller.switch_page("OptionsPage"), width=15)
@@ -109,25 +113,25 @@ class StartPage(tk.Frame):
 
         ## Load Initial Values ##
 
-        self.refresh_mtp_devices()
+        self.refresh_adb_devices()
 
-        if self.controller.config.mtp_device in self.mtp_device_dropdown["values"]:
-            self.mtp_device_dropdown.set(self.controller.config.mtp_device)
-        self.remote_destination_entry.insert(0, self.controller.config.remote_destination)
+        if self.controller.config.adb_device in self.adb_device_dropdown["values"]:
+            self.adb_device_dropdown.set(self.controller.config.adb_device)
+        self.destination_entry.insert(0, self.controller.config.destination)
 
         ## Config Callbacks ##
 
-        def update_mtp_device():
-            self.controller.config.mtp_device = self.mtp_device_dropdown.get()
+        def update_adb_device():
+            self.controller.config.adb_device = self.adb_device_dropdown.get()
             self.controller.config.save_config()
 
-        self.mtp_device_dropdown.bind("<<ComboboxSelected>>", lambda *_: update_mtp_device())
+        self.adb_device_dropdown.bind("<<ComboboxSelected>>", lambda *_: update_adb_device())
 
-        def update_remote_destination():
-            self.controller.config.remote_destination = self.remote_destination_entry.get()
+        def update_destination():
+            self.controller.config.destination = self.destination_entry.get()
             self.controller.config.save_config()
 
-        self.remote_destination_entry.bind("<KeyRelease>", lambda *_: update_remote_destination())
+        self.destination_entry.bind("<KeyRelease>", lambda *_: update_destination())
 
     def log(self, text: str) -> None:
         """Logs messages to the log box.
@@ -146,10 +150,11 @@ class StartPage(tk.Frame):
         """
         self.controller.update_gui_thread_safe(lambda: self.log(text))
 
-    def refresh_mtp_devices(self) -> None:
-        """Refresh the list of available MTP devices."""
-        mtp_devices = scanner.get_mtp_devices()
-        self.mtp_device_dropdown["values"] = [device.Name for device in mtp_devices]
+    def refresh_adb_devices(self) -> None:
+        """Refresh the list of available ADB devices."""
+        adb_devices = self.controller.adb.get_devices()
+        # todo may need to store serial here?
+        self.adb_device_dropdown["values"] = [device.friendly_name for device in adb_devices]
 
     def back_photos(self) -> None:
         """Start the main backup process."""
@@ -164,7 +169,7 @@ class StartPage(tk.Frame):
         folder_path = os.path.abspath(f"./.temp_{now}")
         os.mkdir(folder_path)
 
-        # Find and move/copy all photos from MTP device to working folder
+        # Find and move/copy all photos from ADB device to working folder
         self.log_thread_safe("\nScanning device...")
         scanner.scan_device(self.controller.config, folder_path, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
@@ -177,7 +182,7 @@ class StartPage(tk.Frame):
 
         # Upload photos from working folder to remote destination
         self.log_thread_safe("\nUploading...")
-        uploader.upload(folder_path, self.controller.config.remote_destination, now, self.log_thread_safe)
+        uploader.upload(folder_path, self.controller.config.destination, now, self.log_thread_safe)
         self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
         # Remove temporary files if required
