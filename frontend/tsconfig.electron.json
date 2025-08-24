@@ -1,9 +1,25 @@
 {
-	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"module": "CommonJS",
+		"target": "ES2022",
+		"module": "nodenext",
+		"skipLibCheck": true,
+		"types": ["node"], // ensures Node types are loaded
 		"outDir": "dist",
-		"noEmit": false
+		"esModuleInterop": true,
+
+		/* Bundler mode */
+		"moduleResolution": "nodenext",
+		"moduleDetection": "force",
+
+		/* Linting */
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"erasableSyntaxOnly": true,
+		"noFallthroughCasesInSwitch": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"noUncheckedSideEffectImports": true
 	},
 	"include": ["src/electron"]
 }

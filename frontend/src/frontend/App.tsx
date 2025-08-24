@@ -10,10 +10,9 @@ function App() {
 	);
 
 	return (
-		<div className="App">
-			{/* snip... */}
+		<div>
+			<span className="text-red-500">Hello world</span>
 			<button onClick={updateNodeVersion}>Node version is {nodeVersion}</button>
-			{/* snip... */}
 		</div>
 	);
 }
