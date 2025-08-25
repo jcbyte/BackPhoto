@@ -26,6 +26,7 @@
  * ```
  */
 
+import "@fontsource-variable/inter";
 import "./index.css";
 
 import { StrictMode } from "react";
