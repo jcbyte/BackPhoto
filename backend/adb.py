@@ -121,5 +121,14 @@ class ADB:
     def __init__(self, host="127.0.0.1", port=5037) -> None:
         self.client = AdbClient(host=host, port=port)
 
+        self.client.version
+
+    def is_alive(self):
+        try:
+            self.client.version()
+            return True
+        except:
+            return False
+
     def get_devices(self) -> list[Device]:
         return [Device(adbDevice) for adbDevice in self.client.devices()]

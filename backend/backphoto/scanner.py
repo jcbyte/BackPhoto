@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path, PurePosixPath
 from typing import Callable
 
-from .adb import ADB, DevicePath
+from ..adb import ADB, DevicePath
 from .config_manager import ConfigManager
 
 TEMP_FOLDER = "temp"
@@ -90,7 +90,7 @@ def scan_device(config: ConfigManager, adb: ADB, location: Path, log: Callable[[
         location (Path): The destination folder to place our copied/moved files into.
         log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
-    adb_devices = adb.get_devices()
+    adb_devices = adb.get_devices()  # todo could use client.device(serial)
 
     for device in adb_devices:
         # Skip until we reach the correct ADB device
