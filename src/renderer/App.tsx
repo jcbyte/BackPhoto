@@ -43,7 +43,15 @@ export default function App() {
 							console.log(a);
 						}}
 					>
-						Test
+						1
+					</Button>
+					<Button
+						onClick={async () => {
+							const a = await electronApi.updateConfig({ adbDevice: "JOEL@@" });
+							console.log(a);
+						}}
+					>
+						2
 					</Button>
 				</div>
 

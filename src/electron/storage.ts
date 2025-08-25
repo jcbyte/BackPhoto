@@ -31,3 +31,12 @@ ipcMain.handle("getConfig", (event) => {
 	const config = store.get("userConfig", DEFAULT_USER_CONFIG);
 	return config;
 });
+
+ipcMain.handle("updateConfig", (event, updates: Partial<UserConfig>) => {
+	const currentConfig = store.get("userConfig");
+	const updatedConfig = { ...currentConfig, ...updates };
+
+	store.set("userConfig", updatedConfig);
+
+	return updatedConfig;
+});
