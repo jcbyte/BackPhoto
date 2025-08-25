@@ -11,6 +11,8 @@ if (require("electron-squirrel-startup")) {
 	app.quit();
 }
 
+import "./storage";
+
 const createWindow = (): void => {
 	// Create the browser window
 	const mainWindow = new BrowserWindow({

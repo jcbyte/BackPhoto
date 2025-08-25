@@ -37,6 +37,14 @@ export default function App() {
 							</Button>
 						);
 					})}
+					<Button
+						onClick={async () => {
+							const a = await electronApi.getConfig();
+							console.log(a);
+						}}
+					>
+						Test
+					</Button>
 				</div>
 
 				<div className="flex-1">
