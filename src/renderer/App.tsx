@@ -21,8 +21,8 @@ export default function App() {
 
 	return (
 		<div className="min-h-screen bg-background">
-			<div className="flex h-screen">
-				<div className="w-16 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-4 space-y-4">
+			<div className="flex">
+				<div className="w-16 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col items-center gap-4 py-4">
 					{(Object.keys(TAB_CONFIG) as Tab[]).map((tab) => {
 						const Icon = TAB_CONFIG[tab].icon;
 						return (
@@ -39,7 +39,7 @@ export default function App() {
 					})}
 				</div>
 
-				<div className="flex-1 p-6">
+				<div className="flex-1">
 					<ActiveComponent />
 				</div>
 			</div>
