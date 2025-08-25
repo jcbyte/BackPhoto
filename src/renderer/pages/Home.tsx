@@ -26,11 +26,6 @@ export default function Home() {
 	const [progress, setProgress] = useState(0);
 	const [logs, setLogs] = useState<LogEntry[]>([
 		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
-		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
-		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
-		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
-		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
-		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
 		{ timestamp: "14:32:16", type: "success", message: "Found 3 connected devices" },
 		{ timestamp: "14:32:17", type: "warning", message: "Device authorization required for Pixel 7 Pro" },
 		{ timestamp: "14:32:17", type: "error", message: "ERR Pixel 7 Pro" },
@@ -41,7 +36,7 @@ export default function Home() {
 			{/* Header */}
 			<div className="flex flex-col">
 				<h1 className="text-3xl font-bold tracking-tight">BackPhoto</h1>
-				<p className="text-muted-foreground">Back up your photos, and save space here</p>
+				<p className="text-muted-foreground">Back up your photos, and save space</p>
 			</div>
 
 			<div className="flex flex-col gap-3">
