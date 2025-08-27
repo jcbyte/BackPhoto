@@ -5,10 +5,51 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useUserConfig } from "@/hooks/UserConfigProvider";
 import { AlertTriangleIcon, Folder, Plus, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import Loading from "./Loading";
 
 export default function Options() {
-	const { userConfig } = useUserConfig();
+	const { userConfig, updateUserConfig } = useUserConfig();
+
+	const [newDirectory, setNewDirectory] = useState("");
+	const [newFileType, setNewFileType] = useState("");
+
+	function handleAddIgnoredDir() {
+		if (!newDirectory.trim()) return;
+		// todo ? should this be formatted into posix or does that not matter
+		if (!userConfig || userConfig.ignoredDirs.includes(newDirectory)) {
+			toast.warning("That directory already exists!");
+			return;
+		}
+
+		updateUserConfig({ ignoredDirs: [...userConfig.ignoredDirs, newDirectory] });
+		setNewDirectory("");
+	}
+
+	function handleRemoveIgnoredDir(dir: string) {
+		if (!userConfig) return;
+
+		updateUserConfig({ ignoredDirs: userConfig.ignoredDirs.filter((d) => d !== dir) });
+	}
+
+	function handleAddFileType() {
+		if (!newFileType.trim()) return;
+		// todo should this be formatted into .ext or does that not matter
+		if (!userConfig || userConfig.fileTypes.includes(newFileType)) {
+			toast.warning("That file type already exists!");
+			return;
+		}
+
+		updateUserConfig({ fileTypes: [...userConfig.fileTypes, newFileType] });
+		setNewFileType("");
+	}
+
+	function handleRemoveFileType(fileType: string) {
+		if (!userConfig) return;
+
+		updateUserConfig({ fileTypes: userConfig.fileTypes.filter((ft) => ft !== fileType) });
+	}
 
 	if (!userConfig) {
 		return <Loading />;
@@ -31,8 +72,14 @@ export default function Options() {
 					</CardHeader>
 					<CardContent className="flex flex-col gap-3">
 						<div className="flex gap-3 items-center">
-							<Input placeholder="Enter directory name (e.g., /sdcard/DCIM/Ollie)" className="flex-1" />
-							<Button variant="outline" size="icon">
+							<Input
+								placeholder="Enter directory name (e.g., /sdcard/DCIM/Ollie)"
+								className="flex-1"
+								value={newDirectory}
+								onChange={(e) => setNewDirectory(e.target.value)}
+								onKeyDown={(e) => e.key === "Enter" && handleAddIgnoredDir()}
+							/>
+							<Button variant="outline" size="icon" onClick={handleAddIgnoredDir}>
 								<Plus className="h-6 w-6" />
 							</Button>
 						</div>
@@ -50,7 +97,14 @@ export default function Options() {
 										<Folder className="h-4 w-4" />
 										<span className="font-medium text-sm">{dir}</span>
 									</div>
-									<Button variant="ghost" size="icon" className="h-6 w-6 p-4 hover:bg-red-500/20 hover:text-red-400">
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-6 w-6 p-4 hover:bg-red-500/20 hover:text-red-400"
+										onClick={() => {
+											handleRemoveIgnoredDir(dir);
+										}}
+									>
 										<X className="h-3 w-3" />
 									</Button>
 								</div>
@@ -69,8 +123,14 @@ export default function Options() {
 					</CardHeader>
 					<CardContent className="flex flex-col gap-3">
 						<div className="flex gap-3 items-center">
-							<Input placeholder="Enter file extension (e.g., .jpg, .mp4)" className="flex-1" />
-							<Button variant="outline" size="icon">
+							<Input
+								placeholder="Enter file extension (e.g., .jpg, .mp4)"
+								className="flex-1"
+								value={newFileType}
+								onChange={(e) => setNewFileType(e.target.value)}
+								onKeyDown={(e) => e.key === "Enter" && handleAddFileType()}
+							/>
+							<Button variant="outline" size="icon" onClick={handleAddFileType}>
 								<Plus className="h-6 w-6" />
 							</Button>
 						</div>
@@ -88,7 +148,14 @@ export default function Options() {
 										<Folder className="h-4 w-4" />
 										<span className="font-medium text-sm">{fileType}</span>
 									</div>
-									<Button variant="ghost" size="icon" className="h-6 w-6 p-4 hover:bg-red-500/20 hover:text-red-400">
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-6 w-6 p-4 hover:bg-red-500/20 hover:text-red-400"
+										onClick={() => {
+											handleRemoveFileType(fileType);
+										}}
+									>
 										<X className="h-3 w-3" />
 									</Button>
 								</div>
@@ -107,7 +174,10 @@ export default function Options() {
 					<CardContent>
 						<div className="flex flex-col gap-2">
 							<div className="flex items-center gap-2">
-								<Switch />
+								<Switch
+									checked={userConfig.setExif}
+									onCheckedChange={(value) => updateUserConfig({ setExif: value })}
+								/>
 								<div className="flex flex-col">
 									<span className="text-sm font-medium">Set Missing EXIF Timestamps</span>
 									<span className="text-xs text-muted-foreground">
@@ -117,7 +187,10 @@ export default function Options() {
 							</div>
 
 							<div className="flex items-center gap-2">
-								<Switch />
+								<Switch
+									checked={userConfig.skipDot}
+									onCheckedChange={(value) => updateUserConfig({ skipDot: value })}
+								/>
 								<div className="flex flex-col">
 									<span className="text-sm font-medium">Skip Hidden Files</span>
 									<span className="text-xs text-muted-foreground">
@@ -127,25 +200,33 @@ export default function Options() {
 							</div>
 
 							<div className="flex items-center gap-2">
-								<Switch />
+								<Switch
+									checked={userConfig.moveFiles}
+									onCheckedChange={(value) => updateUserConfig({ moveFiles: value })}
+								/>
 								<div className="flex flex-col">
 									<span className="text-sm font-medium">Move Files Instead of Copying</span>
 									<span className="text-xs text-muted-foreground">Remove files from the device after backup.</span>
 								</div>
 							</div>
 
-							<Alert variant="destructive">
-								<AlertTriangleIcon className="h-4 w-4" />
-								<AlertDescription>
-									<span>
-										<span className="font-semibold">Warning:</span> Copying files may create duplicates in destination
-										folder when re-run.
-									</span>
-								</AlertDescription>
-							</Alert>
+							{!userConfig.moveFiles && (
+								<Alert variant="destructive">
+									<AlertTriangleIcon className="h-4 w-4" />
+									<AlertDescription>
+										<span>
+											<span className="font-semibold">Warning:</span> Copying files may create duplicates in destination
+											folder when re-run.
+										</span>
+									</AlertDescription>
+								</Alert>
+							)}
 
 							<div className="flex items-center gap-2">
-								<Switch />
+								<Switch
+									checked={userConfig.removeTempFiles}
+									onCheckedChange={(value) => updateUserConfig({ removeTempFiles: value })}
+								/>
 								<div className="flex flex-col">
 									<span className="text-sm font-medium">Remove Temporary Files</span>
 									<span className="text-xs text-muted-foreground">

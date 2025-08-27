@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import Home from "@/pages/Home";
 import Options from "@/pages/Options";
 import type { LucideIcon } from "lucide-react";
@@ -20,45 +21,32 @@ export default function App() {
 	const ActiveComponent = TAB_CONFIG[activeTab].component;
 
 	return (
-		<div className="min-h-screen bg-background">
-			<div className="flex">
-				<div className="w-16 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col items-center gap-4 py-4">
-					{(Object.keys(TAB_CONFIG) as Tab[]).map((tab) => {
-						const Icon = TAB_CONFIG[tab].icon;
-						return (
-							<Button
-								key={tab}
-								variant={tab === activeTab ? "default" : "ghost"}
-								size="icon"
-								onClick={() => setActiveTab(tab)}
-								className="w-10 h-10"
-							>
-								<Icon className="h-5 w-5" />
-							</Button>
-						);
-					})}
-					<Button
-						onClick={async () => {
-							const a = await electronApi.getConfig();
-							console.log(a);
-						}}
-					>
-						1
-					</Button>
-					<Button
-						onClick={async () => {
-							const a = await electronApi.updateConfig({ adbDevice: "JOEL@@" });
-							console.log(a);
-						}}
-					>
-						2
-					</Button>
-				</div>
+		<>
+			<div className="min-h-screen bg-background">
+				<div className="flex">
+					<div className="w-16 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col items-center gap-4 py-4">
+						{(Object.keys(TAB_CONFIG) as Tab[]).map((tab) => {
+							const Icon = TAB_CONFIG[tab].icon;
+							return (
+								<Button
+									key={tab}
+									variant={tab === activeTab ? "default" : "ghost"}
+									size="icon"
+									onClick={() => setActiveTab(tab)}
+									className="w-10 h-10"
+								>
+									<Icon className="h-5 w-5" />
+								</Button>
+							);
+						})}
+					</div>
 
-				<div className="flex-1">
-					<ActiveComponent />
+					<div className="flex-1">
+						<ActiveComponent />
+					</div>
 				</div>
 			</div>
-		</div>
+			<Toaster position="top-center" />
+		</>
 	);
 }
