@@ -32,10 +32,13 @@ import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { UserConfigProvider } from "./hooks/UserConfigProvider";
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<App />
+		<UserConfigProvider>
+			<App />
+		</UserConfigProvider>
 	</StrictMode>
 );
 
