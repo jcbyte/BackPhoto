@@ -1,4 +1,4 @@
-import type { AdbDevice } from "./backendApi";
+import type { AdbDevice, BackendResponse } from "./backendApi";
 import type { UserConfig } from "./storage";
 
 declare global {
@@ -8,6 +8,7 @@ declare global {
 	}
 
 	namespace backendApi {
-		function getDevices(): Promise<AdbDevice[]>;
+		function connectToADB(): Promise<BackendResponse>;
+		function getDevices(): Promise<BackendResponse<AdbDevice[]>>;
 	}
 }

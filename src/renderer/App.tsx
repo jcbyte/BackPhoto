@@ -43,11 +43,21 @@ export default function App() {
 							variant="secondary"
 							size="icon"
 							onClick={() => {
+								backendApi.connectToADB().then((r) => console.log(r));
+							}}
+							className="w-10 h-10"
+						>
+							Con
+						</Button>
+						<Button
+							variant="secondary"
+							size="icon"
+							onClick={() => {
 								backendApi.getDevices().then((r) => console.log(r));
 							}}
 							className="w-10 h-10"
 						>
-							T
+							Dev
 						</Button>
 					</div>
 

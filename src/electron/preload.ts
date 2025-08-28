@@ -1,10 +1,8 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-// const { contextBridge, ipcRenderer } = require("electron");
-
 import { contextBridge, ipcRenderer } from "electron";
-import type { AdbDevice } from "./backendApi";
+import type { AdbDevice, BackendResponse } from "./backendApi";
 import type { UserConfig } from "./storage";
 
 contextBridge.exposeInMainWorld("electronApi", {
@@ -14,5 +12,6 @@ contextBridge.exposeInMainWorld("electronApi", {
 });
 
 contextBridge.exposeInMainWorld("backendApi", {
-	getDevices: (): Promise<AdbDevice[]> => ipcRenderer.invoke("backendApi.getDevices"),
+	connectToADB: (): Promise<BackendResponse> => ipcRenderer.invoke("backendApi.connectToADB"),
+	getDevices: (): Promise<BackendResponse<AdbDevice[]>> => ipcRenderer.invoke("backendApi.getDevices"),
 });
