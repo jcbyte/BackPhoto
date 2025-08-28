@@ -4,9 +4,15 @@
 // const { contextBridge, ipcRenderer } = require("electron");
 
 import { contextBridge, ipcRenderer } from "electron";
-import { UserConfig } from "./storage";
+import type { AdbDevice } from "./backendApi";
+import type { UserConfig } from "./storage";
 
 contextBridge.exposeInMainWorld("electronApi", {
-	getConfig: (): Promise<UserConfig> => ipcRenderer.invoke("getConfig"),
-	updateConfig: (updates: Partial<UserConfig>): Promise<UserConfig> => ipcRenderer.invoke("updateConfig", updates),
+	getConfig: (): Promise<UserConfig> => ipcRenderer.invoke("electronApi.getConfig"),
+	updateConfig: (updates: Partial<UserConfig>): Promise<UserConfig> =>
+		ipcRenderer.invoke("electronApi.updateConfig", updates),
+});
+
+contextBridge.exposeInMainWorld("backendApi", {
+	getDevices: (): Promise<AdbDevice[]> => ipcRenderer.invoke("backendApi.getDevices"),
 });

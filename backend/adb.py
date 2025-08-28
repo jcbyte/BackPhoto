@@ -14,6 +14,13 @@ class Device:
         return self.device.serial
 
     @property
+    def authorised(self) -> bool:
+        try:
+            return self.device.get_state() == "device"
+        except:
+            return False
+
+    @property
     def friendly_name(self) -> str:
         """Get a user friendly name for the connected device."""
 

@@ -11,6 +11,7 @@ if (require("electron-squirrel-startup")) {
 	app.quit();
 }
 
+import "./backendApi";
 import "./storage";
 
 const createWindow = (): void => {

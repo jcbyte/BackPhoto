@@ -39,6 +39,16 @@ export default function App() {
 								</Button>
 							);
 						})}
+						<Button
+							variant="secondary"
+							size="icon"
+							onClick={() => {
+								backendApi.getDevices().then((r) => console.log(r));
+							}}
+							className="w-10 h-10"
+						>
+							T
+						</Button>
 					</div>
 
 					<div className="flex-1">

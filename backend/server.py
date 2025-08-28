@@ -27,7 +27,18 @@ async def devices():
 
     try:
         devices = app.state.adb.get_devices()
-        return {"devices": [{"serial": device.serial, "name": device.friendly_name} for device in devices]}
+
+        return {
+            "devices": [
+                {
+                    "serial": device.serial,
+                    "authorised": device.authorised,
+                    **({"name": device.friendly_name} if device.authorised else {}),
+                }
+                for device in devices
+            ]
+        }
+
     except:
         raise HTTPException(status_code=400, detail="Could not connect to ADB server")
 
