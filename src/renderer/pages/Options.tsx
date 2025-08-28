@@ -15,15 +15,28 @@ export default function Options() {
 	const [newDirectory, setNewDirectory] = useState("");
 	const [newFileType, setNewFileType] = useState("");
 
+	function toPosix(path: string): string {
+		let p = path.trim();
+		if (!p) return "/";
+		p = p.replace(/\\/g, "/"); // replace backslashes with forward slashes
+		p = p.replace(/\/+/g, "/"); // remove duplicate slashes
+		if (!p.startsWith("/")) p = "/" + p; // ensure leading slash
+		if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1); // remove trailing slash (unless root "/")
+
+		return p;
+	}
+
 	function handleAddIgnoredDir() {
 		if (!newDirectory.trim()) return;
-		// todo ? should this be formatted into posix or does that not matter
-		if (!userConfig || userConfig.ignoredDirs.includes(newDirectory)) {
+
+		const normalisedDir = toPosix(newDirectory);
+
+		if (!userConfig || userConfig.ignoredDirs.includes(normalisedDir)) {
 			toast.warning("That directory already exists!");
 			return;
 		}
 
-		updateUserConfig({ ignoredDirs: [...userConfig.ignoredDirs, newDirectory] });
+		updateUserConfig({ ignoredDirs: [...userConfig.ignoredDirs, normalisedDir] });
 		setNewDirectory("");
 	}
 
@@ -33,15 +46,22 @@ export default function Options() {
 		updateUserConfig({ ignoredDirs: userConfig.ignoredDirs.filter((d) => d !== dir) });
 	}
 
+	function toExt(ext: string): string {
+		let e = ext.trim();
+		if (!e.startsWith(".")) e = "." + e; // ensure leading dot
+		return e;
+	}
+
 	function handleAddFileType() {
 		if (!newFileType.trim()) return;
-		// todo should this be formatted into .ext or does that not matter
-		if (!userConfig || userConfig.fileTypes.includes(newFileType)) {
+
+		const normalisedFileType = toExt(newFileType);
+		if (!userConfig || userConfig.fileTypes.includes(normalisedFileType)) {
 			toast.warning("That file type already exists!");
 			return;
 		}
 
-		updateUserConfig({ fileTypes: [...userConfig.fileTypes, newFileType] });
+		updateUserConfig({ fileTypes: [...userConfig.fileTypes, normalisedFileType] });
 		setNewFileType("");
 	}
 

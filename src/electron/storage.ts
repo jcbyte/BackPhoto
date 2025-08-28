@@ -13,7 +13,7 @@ export interface UserConfig {
 }
 const DEFAULT_USER_CONFIG: UserConfig = {
 	destinationPath: "",
-	ignoredDirs: ["/sdcard/Android/", "/sdcard/storage/"],
+	ignoredDirs: ["/sdcard/Android", "/sdcard/storage"],
 	fileTypes: [".jpg", ".jpeg", ".webp", ".png", ".mp4"],
 	setExif: true,
 	skipDot: true,
