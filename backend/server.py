@@ -1,9 +1,7 @@
-import asyncio
-import json
 import shutil
 import time
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal
 
 import file_tools
 import photo_tools
@@ -61,6 +59,18 @@ async def backup(body: BackupBody):
     if app.state.adb is None:
         raise HTTPException(status_code=400, detail="ADB is not initialised")
 
+    def get_stage_progress_range(stage_weights: dict[str, float]) -> dict[str, tuple[float, float]]:
+        # * Ensure Python 3.7+ for ordered dictionaries
+        total = sum(stage_weights.values())
+        start = 0
+        progress_ranges: dict[str, tuple[float, float]] = {}
+        for stage, weight in stage_weights.items():
+            end = start + (weight / total)
+            progress_ranges.update({stage: (start, end)})
+            start = end
+
+        return progress_ranges
+
     class StreamedBackupLogEntry(BaseModel):
         timestamp: int
         type: Literal["info", "success", "error", "warning"]
@@ -70,13 +80,18 @@ async def backup(body: BackupBody):
         progress: float | None = None
         log: StreamedBackupLogEntry | None = None
 
-    def format_yield(obj: BackupYield) -> str:
+    def format_yield(obj: BackupYield, progress_range: tuple[float, float] = (0, 1)) -> str:
+        progress = obj.progress
+        if progress is not None:
+            start, end = progress_range
+            progress = start + (end - start) * progress
+
         log_entry = obj.log
         if log_entry is not None:
             log_entry = StreamedBackupLogEntry(timestamp=int(time.time()), type=log_entry.type, content=log_entry.content)
 
         response = StreamedBackupResponse(
-            progress=obj.progress,
+            progress=progress,
             log=log_entry,
         )
         return f"data: {response.model_dump_json(exclude_none=True)}\n\n"
@@ -85,55 +100,61 @@ async def backup(body: BackupBody):
         return f"event: error\ndata: {str(e)}\n\n"
 
     async def event_generator():
-        # todo progress updates
-
         # Create temporary working folder
         now = time.strftime("%Y-%m-%d_%H-%M-%S")
-        # folder_path = Path(".", f".temp_{now}")
-        # folder_path.mkdir()
-        folder_path = Path(".", ".temp_2025-08-29_13-53-31")
+        folder_path = Path(".", f".temp_{now}")
+        folder_path.mkdir()
+
+        progress_ranges = get_stage_progress_range(
+            {
+                "scan": 0.5,
+                "exif": 0.225 if body.config.setExif else 0,
+                "move": 0.225,
+                "removeTemp": 0.05 if body.config.removeTempFiles else 0,
+            }
+        )
 
         # Find and move/copy all photos from ADB device to working folder
-        yield format_yield(BackupYield(log=LogEntry(content="Scanning device...")))
+        yield format_yield(BackupYield(log=LogEntry(content="Scanning device..."), progress=0), progress_ranges["scan"])
         try:
             for y in scanner.scan_device(folder_path, app.state.adb, body.config):
-                yield format_yield(y)
+                yield format_yield(y, progress_ranges["scan"])
         except Exception as e:
             yield error_yield(e)
             return
-        yield format_yield(BackupYield(log=LogEntry(content="Device scan completed")))
+        yield format_yield(BackupYield(log=LogEntry(content="Device scan completed"), progress=1), progress_ranges["scan"])
         # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
         # Modify photo time in EXIF if required
         if body.config.setExif:
-            yield format_yield(BackupYield(log=LogEntry(content="Setting photo time in EXIF...")))
+            yield format_yield(BackupYield(log=LogEntry(content="Setting photo time in EXIF..."), progress=0), progress_ranges["exif"])
             try:
                 for y in photo_tools.set_photos_exif_time(folder_path):
-                    yield format_yield(y)
+                    yield format_yield(y, progress_ranges["exif"])
             except Exception as e:
                 yield error_yield(e)
                 return
-            yield format_yield(BackupYield(log=LogEntry(content="Completed EXIF update")))
+            yield format_yield(BackupYield(log=LogEntry(content="Completed EXIF update"), progress=1), progress_ranges["exif"])
             # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
 
         # Move photos from working folder to destination
-        yield format_yield(BackupYield(log=LogEntry(content="Moving files to destination")))
+        yield format_yield(BackupYield(log=LogEntry(content="Moving files to destination"), progress=0), progress_ranges["move"])
         try:
             for y in file_tools.move(folder_path, Path(body.config.destinationPath), now):
-                yield format_yield(y)
+                yield format_yield(y, progress_ranges["move"])
         except Exception as e:
             yield error_yield(e)
             return
-        yield format_yield(BackupYield(log=LogEntry(content="Moving files completed")))
+        yield format_yield(BackupYield(log=LogEntry(content="Moving files completed"), progress=1), progress_ranges["move"])
         # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
         # Remove temporary files if required
         if body.config.removeTempFiles:
-            yield format_yield(BackupYield(log=LogEntry(content="Removing temporary files...")))
+            yield format_yield(BackupYield(log=LogEntry(content="Removing temporary files..."), progress=0), progress_ranges["removeTemp"])
             shutil.rmtree(folder_path)
-            yield format_yield(BackupYield(log=LogEntry(content="Temporary files removed")))
+            yield format_yield(BackupYield(log=LogEntry(content="Temporary files removed"), progress=1), progress_ranges["removeTemp"])
 
-        yield format_yield(BackupYield(log=LogEntry(content="Complete!", type="success")))
+        yield format_yield(BackupYield(log=LogEntry(content="Complete!", type="success"), progress=1))
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

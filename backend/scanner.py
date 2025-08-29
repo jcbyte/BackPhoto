@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path, PurePosixPath
-from typing import Callable, Generator
+from typing import Generator
 
 from adb import ADB, DevicePath
 from typings import BackupYield, LogEntry, UserConfig

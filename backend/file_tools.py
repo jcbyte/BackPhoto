@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Callable, Generator
+from typing import Generator
 
 from photo_tools import get_exif_time, get_os_time, load_exif
 from typings import BackupYield, LogEntry
