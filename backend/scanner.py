@@ -54,7 +54,7 @@ def scan_folder(path: DevicePath, config: UserConfig, destination: Path) -> Gene
     if path._path in [PurePosixPath(ignored_path) for ignored_path in config.ignoredDirs]:
         return
 
-    yield BackupYield(log=LogEntry(content=f'Scanning: "{path.path}"'))
+    yield BackupYield(log=LogEntry(content=f"Scanning {path.path}"))
 
     # Iterate though every item in the ADB folder
     for item in path.list():
@@ -76,7 +76,7 @@ def scan_folder(path: DevicePath, config: UserConfig, destination: Path) -> Gene
             item.cut2(resolved_destination) if config.moveFiles else item.copy2(resolved_destination)
 
             if item.name != resolved_destination.name:
-                yield BackupYield(log=LogEntry(content=f'Renamed: "{item.name}" to "{resolved_destination.name}"'))
+                yield BackupYield(log=LogEntry(content=f"Renamed {item.name} to {resolved_destination.name}"))
 
 
 def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[BackupYield, None, None]:
@@ -88,7 +88,7 @@ def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[Backu
         config (UserConfig): The configuration to use when selecting ADB device and scanning.
     """
     if config.adbDevice is None:
-        raise Exception("Device is not selected")
+        raise Exception("Device not selected")
 
     try:
         device = adb.get_device(config.adbDevice)

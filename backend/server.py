@@ -1,9 +1,12 @@
 import asyncio
 import json
+import shutil
 import time
 from pathlib import Path
 from typing import Literal, TypedDict
 
+import file_tools
+import photo_tools
 import scanner
 from adb import ADB
 from fastapi import FastAPI, HTTPException, Query
@@ -86,43 +89,51 @@ async def backup(body: BackupBody):
 
         # Create temporary working folder
         now = time.strftime("%Y-%m-%d_%H-%M-%S")
-        folder_path = Path(".", f".temp_{now}")
-        folder_path.mkdir()
+        # folder_path = Path(".", f".temp_{now}")
+        # folder_path.mkdir()
+        folder_path = Path(".", ".temp_2025-08-29_13-53-31")
 
         # Find and move/copy all photos from ADB device to working folder
-        yield format_yield(BackupYield(log=LogEntry(content="Scanning device")))
+        yield format_yield(BackupYield(log=LogEntry(content="Scanning device...")))
         try:
             for y in scanner.scan_device(folder_path, app.state.adb, body.config):
                 yield format_yield(y)
         except Exception as e:
             yield error_yield(e)
             return
+        yield format_yield(BackupYield(log=LogEntry(content="Device scan completed")))
         # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
-        # # Modify photo time in EXIF if required
-        # if self.controller.config.set_time:
-        #     self.log_thread_safe("\nSetting photo time in EXIF...")
-        #     photo_tools.set_photos_exif_time(folder_path, self.log_thread_safe)
-        #     self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
+        # Modify photo time in EXIF if required
+        if body.config.setExif:
+            yield format_yield(BackupYield(log=LogEntry(content="Setting photo time in EXIF...")))
+            try:
+                for y in photo_tools.set_photos_exif_time(folder_path):
+                    yield format_yield(y)
+            except Exception as e:
+                yield error_yield(e)
+                return
+            yield format_yield(BackupYield(log=LogEntry(content="Completed EXIF update")))
+            # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
 
-        # # Move photos from working folder to destination
-        # self.log_thread_safe("\nMoving to destination...")
-        # file_tools.move(folder_path, Path(self.controller.config.destination), now, self.log_thread_safe)
+        # Move photos from working folder to destination
+        yield format_yield(BackupYield(log=LogEntry(content="Moving files to destination")))
+        try:
+            for y in file_tools.move(folder_path, Path(body.config.destinationPath), now):
+                yield format_yield(y)
+        except Exception as e:
+            yield error_yield(e)
+            return
+        yield format_yield(BackupYield(log=LogEntry(content="Moving files completed")))
         # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
-        # # Remove temporary files if required
-        # if self.controller.config.delete_temporary_files:
-        #     self.log_thread_safe("\nRemoving temporary files...")
-        #     shutil.rmtree(folder_path)
+        # Remove temporary files if required
+        if body.config.removeTempFiles:
+            yield format_yield(BackupYield(log=LogEntry(content="Removing temporary files...")))
+            shutil.rmtree(folder_path)
+            yield format_yield(BackupYield(log=LogEntry(content="Temporary files removed")))
 
-        # self.log_thread_safe("\nComplete!")
-        # self.controller.update_gui_thread_safe(lambda: self.start_button.config(state="active"))
-
-        # i = 0
-        # for i in range(3):
-        #     i += 1
-        #     yield f"data: Update {i}\n\n"  # Each message must start with 'data:' and end with double newline
-        #     await asyncio.sleep(1)  # simulate periodic updates
+        yield format_yield(BackupYield(log=LogEntry(content="Complete!", type="success")))
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

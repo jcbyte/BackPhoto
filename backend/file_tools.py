@@ -1,21 +1,21 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Generator
 
-from .photo_tools import get_exif_time, get_os_time, load_exif
+from photo_tools import get_exif_time, get_os_time, load_exif
+from typings import BackupYield, LogEntry
 
 MONTH_NAMES = ["01January", "02February", "03March", "04April", "05May", "06June", "07July", "08August", "09September", "10October", "11November", "12December"]
 
 
-def move(src: Path, dst: Path, last_updated: str | None = None, log: Callable[[str], None] | None = print) -> None:
+def move(src: Path, dst: Path, last_updated: str | None = None) -> Generator[BackupYield, None, None]:
     """Moves files from a source directory to a destination directory, organising them by year and month.
 
     Args:
         local_path (Path): The source directory containing the files to upload.
         remote_path (Path): The destination directory for the uploaded files.
         last_updated (str, optional): A timestamp to write to a LastUpdated.txt file. Defaults to None.
-        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     # Ensure the remote path exists
     dst.mkdir(parents=True, exist_ok=True)
@@ -36,13 +36,11 @@ def move(src: Path, dst: Path, last_updated: str | None = None, log: Callable[[s
             # Copy the file with metadata
             shutil.copy2(file_path, dst_path)
 
-            if log:
-                log(f'Uploaded: "{file_path.name}"')
+            # yield BackupYield(log=LogEntry(content=f'Uploaded: "{file_path.name}"'))
 
     # If a last updated text is given then write this into the remote path
     if last_updated:
         with open(os.path.join(dst, "LastUpdated.txt"), "w") as f:
             f.write(last_updated)
 
-        if log:
-            log(f"Set LastUpdated.txt")
+        yield BackupYield(log=LogEntry(content="Set LastUpdated.txt"))
