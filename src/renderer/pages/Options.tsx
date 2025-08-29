@@ -107,11 +107,11 @@ export default function Options() {
 						<div className="flex flex-col">
 							<span className="text-sm font-semibold">Currently Ignored ({userConfig.ignoredDirs.length})</span>
 						</div>
-						<div className="grid grid-cols-3 gap-3">
+						<div className="flex flex-wrap gap-3">
 							{userConfig.ignoredDirs.map((dir) => (
 								<div
 									key={dir}
-									className="flex items-center justify-between p-1 px-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+									className="flex items-center justify-between py-1 px-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
 								>
 									<div className="flex items-center gap-2">
 										<Folder className="h-4 w-4" />
@@ -158,11 +158,11 @@ export default function Options() {
 						<div className="flex flex-col">
 							<span className="text-sm font-semibold">Currently Included ({userConfig.fileTypes.length})</span>
 						</div>
-						<div className="grid grid-cols-3 gap-2">
+						<div className="flex flex-wrap gap-2">
 							{userConfig.fileTypes.map((fileType) => (
 								<div
 									key={fileType}
-									className="flex items-center justify-between p-1 px-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+									className="flex items-center justify-between py-1 px-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
 								>
 									<div className="flex items-center gap-2">
 										<Folder className="h-4 w-4" />
