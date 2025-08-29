@@ -2,38 +2,54 @@ import shutil
 import time
 from pathlib import Path
 from typing import Literal
+from uuid import uuid4
 
 import file_tools
 import photo_tools
 import scanner
 from adb import ADB
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typings import BackupYield, LogEntry, UserConfig
 
+
+class BackupData(BaseModel):
+    config: UserConfig
+
+
+class AppState(BaseModel):
+    adb: ADB | None = None
+    backup_jobs: dict[str, BackupData] = {}
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
 app = FastAPI()
+app.state.data = AppState()
 
-app.state.adb = None
+
+def get_app_state(request: Request) -> AppState:
+    return request.app.state.data
 
 
-@app.get("/connect")
-async def connect(host: str = Query("127.0.0.1", description="ADB server host"), port: int = Query(5037, description="ADB server port")):
-    app.state.adb = ADB(host, port)
+@app.post("/connect")
+async def connect(host: str = Query("127.0.0.1", description="ADB server host"), port: int = Query(5037, description="ADB server port"), state: AppState = Depends(get_app_state)):
+    state.adb = ADB(host, port)
 
-    if not app.state.adb.is_alive():
+    if not state.adb.is_alive():
         raise HTTPException(status_code=400, detail="Could not connect to ADB server")
 
     return {}
 
 
 @app.get("/devices")
-async def devices():
-    if app.state.adb is None:
+async def devices(state: AppState = Depends(get_app_state)):
+    if state.adb is None:
         raise HTTPException(status_code=400, detail="ADB is not initialised")
 
     try:
-        devices = app.state.adb.get_devices()
+        devices = state.adb.get_devices()
 
         return {
             "devices": [
@@ -50,13 +66,21 @@ async def devices():
         raise HTTPException(status_code=400, detail="Could not connect to ADB server")
 
 
-class BackupBody(BaseModel):
-    config: UserConfig
+@app.post("/backup/start")
+async def backup_start(body: BackupData, state: AppState = Depends(get_app_state)):
+    id = str(uuid4())
+    state.backup_jobs[id] = body
+    return {"jobId": id}
 
 
 @app.get("/backup")
-async def backup(body: BackupBody):
-    if app.state.adb is None:
+async def backup(jobId: str = Query("", description="ID given from `/backup/start` containing configuration"), state: AppState = Depends(get_app_state)):
+    backup_data = state.backup_jobs.pop(jobId, None)
+    if backup_data is None:
+        raise HTTPException(status_code=400, detail="jobId does not correspond to a given backup job")
+
+    adb = state.adb
+    if adb is None:
         raise HTTPException(status_code=400, detail="ADB is not initialised")
 
     def get_stage_progress_range(stage_weights: dict[str, float]) -> dict[str, tuple[float, float]]:
@@ -97,7 +121,7 @@ async def backup(body: BackupBody):
         return f"data: {response.model_dump_json(exclude_none=True)}\n\n"
 
     def error_yield(e: Exception):
-        return f"event: error\ndata: {str(e)}\n\n"
+        return f"event: backend-error\ndata: {str(e)}\n\n"
 
     async def event_generator():
         # Create temporary working folder
@@ -108,25 +132,24 @@ async def backup(body: BackupBody):
         progress_ranges = get_stage_progress_range(
             {
                 "scan": 0.5,
-                "exif": 0.225 if body.config.setExif else 0,
+                "exif": 0.225 if backup_data.config.setExif else 0,
                 "move": 0.225,
-                "removeTemp": 0.05 if body.config.removeTempFiles else 0,
+                "removeTemp": 0.05 if backup_data.config.removeTempFiles else 0,
             }
         )
 
         # Find and move/copy all photos from ADB device to working folder
         yield format_yield(BackupYield(log=LogEntry(content="Scanning device..."), progress=0), progress_ranges["scan"])
         try:
-            for y in scanner.scan_device(folder_path, app.state.adb, body.config):
+            for y in scanner.scan_device(folder_path, adb, backup_data.config):
                 yield format_yield(y, progress_ranges["scan"])
         except Exception as e:
             yield error_yield(e)
             return
         yield format_yield(BackupYield(log=LogEntry(content="Device scan completed"), progress=1), progress_ranges["scan"])
-        # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(33 if self.controller.config.set_time else 50))
 
         # Modify photo time in EXIF if required
-        if body.config.setExif:
+        if backup_data.config.setExif:
             yield format_yield(BackupYield(log=LogEntry(content="Setting photo time in EXIF..."), progress=0), progress_ranges["exif"])
             try:
                 for y in photo_tools.set_photos_exif_time(folder_path):
@@ -135,21 +158,19 @@ async def backup(body: BackupBody):
                 yield error_yield(e)
                 return
             yield format_yield(BackupYield(log=LogEntry(content="Completed EXIF update"), progress=1), progress_ranges["exif"])
-            # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(67))
 
         # Move photos from working folder to destination
         yield format_yield(BackupYield(log=LogEntry(content="Moving files to destination"), progress=0), progress_ranges["move"])
         try:
-            for y in file_tools.move(folder_path, Path(body.config.destinationPath), now):
+            for y in file_tools.move(folder_path, Path(backup_data.config.destinationPath), now):
                 yield format_yield(y, progress_ranges["move"])
         except Exception as e:
             yield error_yield(e)
             return
         yield format_yield(BackupYield(log=LogEntry(content="Moving files completed"), progress=1), progress_ranges["move"])
-        # self.controller.update_gui_thread_safe(lambda: self.progress_bar_var.set(100))
 
         # Remove temporary files if required
-        if body.config.removeTempFiles:
+        if backup_data.config.removeTempFiles:
             yield format_yield(BackupYield(log=LogEntry(content="Removing temporary files..."), progress=0), progress_ranges["removeTemp"])
             shutil.rmtree(folder_path)
             yield format_yield(BackupYield(log=LogEntry(content="Temporary files removed"), progress=1), progress_ranges["removeTemp"])

@@ -59,6 +59,19 @@ export default function App() {
 						>
 							Dev
 						</Button>
+						<Button
+							variant="secondary"
+							size="icon"
+							onClick={() => {
+								backendApi.backup(
+									(u) => console.log("update", u),
+									(e) => console.log("error", e)
+								);
+							}}
+							className="w-10 h-10"
+						>
+							Back
+						</Button>
 					</div>
 
 					<div className="flex-1">
