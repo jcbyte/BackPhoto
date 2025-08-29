@@ -142,3 +142,10 @@ class ADB:
 
     def get_devices(self) -> list[Device]:
         return [Device(adbDevice) for adbDevice in self.client.devices()]
+
+    def get_device(self, serial: str) -> Device | None:
+        device = self.client.device(serial)
+        if device:
+            return Device(device)
+
+        return None

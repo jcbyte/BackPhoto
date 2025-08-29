@@ -14,6 +14,15 @@ export type AdbDevice = {
 	serial: string;
 } & ({ authorised: true; name: string } | { authorised: false });
 
+type BackupStreamedResponse = {
+	progress?: number;
+	log?: {
+		timestamp: number;
+		type: "info" | "success" | "error" | "warning";
+		content: string;
+	};
+};
+
 ipcMain.handle("backendApi.connectToADB", async (_event): Promise<BackendResponse> => {
 	try {
 		const res = await fetch(`${API_URL}/connect`);

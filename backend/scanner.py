@@ -1,10 +1,10 @@
 import os
 import shutil
 from pathlib import Path, PurePosixPath
-from typing import Callable
+from typing import Callable, Generator
 
-from ..adb import ADB, DevicePath
-from .config_manager import ConfigManager
+from adb import ADB, DevicePath
+from typings import BackupYield, LogEntry, UserConfig
 
 TEMP_FOLDER = "temp"
 ROOT_DIR = PurePosixPath("/sdcard")
@@ -42,61 +42,64 @@ def get_resolved_path(wanted_filename: Path) -> Path:
     return wanted_filename.parent / new_filename
 
 
-def scan_folder(path: DevicePath, config: ConfigManager, destination: Path, log: Callable[[str], None] | None = print) -> None:
+def scan_folder(path: DevicePath, config: UserConfig, destination: Path) -> Generator[BackupYield, None, None]:
     """Recursively scan a folder and copy/move files based on the configuration given.
 
     Args:
         path (DevicePath): The devices file path representing this folder.
         config (ConfigManager): The configuration to use when scanning.
         destination (str): The destination folder to place our copied/moved files into.
-        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     # Skip if we should ignore this path
-    if path._path in [PurePosixPath(ignored_path) for ignored_path in config.ignored_dirs]:
+    if path._path in [PurePosixPath(ignored_path) for ignored_path in config.ignoredDirs]:
         return
 
-    if log is not None:
-        log(f'Scanning: "{path.path}"')
+    yield BackupYield(log=LogEntry(content=f'Scanning: "{path.path}"'))
 
     # Iterate though every item in the ADB folder
     for item in path.list():
         # Skip if item starts with '.' and we should ignore these
-        if not config.include_dot and item.name.startswith("."):
+        if config.skipDot and item.name.startswith("."):
             continue
 
         if item.is_dir:
             # If item is a folder then recursively call this function to scan though all files.
-            scan_folder(item, config, destination, log)
+            yield from scan_folder(item, config, destination)
         else:
             ext = item.suffix.lower()
             # Skip if we should not copy/move this type of file
-            if ext not in config.file_types:
+            if ext not in config.fileTypes:
                 continue
 
             # Ensure we have a unique filename
             resolved_destination = get_resolved_path(destination / item.name)
-            item.cut2(resolved_destination) if config.move_files else item.copy2(resolved_destination)
+            item.cut2(resolved_destination) if config.moveFiles else item.copy2(resolved_destination)
 
-            if log and item.name != resolved_destination.name:
-                log(f'Renamed: "{item.name}" to "{resolved_destination.name}"')
+            if item.name != resolved_destination.name:
+                yield BackupYield(log=LogEntry(content=f'Renamed: "{item.name}" to "{resolved_destination.name}"'))
 
 
-def scan_device(config: ConfigManager, adb: ADB, location: Path, log: Callable[[str], None] | None = print):
+def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[BackupYield, None, None]:
     """Scan an ADB device and copy/move its files based on the configuration given.
 
     Args:
-        config (ConfigManager): The configuration to use when selecting ADB device and scanning.
-        adb (ADB): The connected adb server.
         location (Path): The destination folder to place our copied/moved files into.
-        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
+        adb (ADB): The connected adb server.
+        config (UserConfig): The configuration to use when selecting ADB device and scanning.
     """
-    adb_devices = adb.get_devices()  # todo could use client.device(serial)
+    if config.adbDevice is None:
+        raise Exception("Device is not selected")
 
-    for device in adb_devices:
-        # Skip until we reach the correct ADB device
-        if device.serial != config.adb_device:
-            continue
+    try:
+        device = adb.get_device(config.adbDevice)
+    except:
+        raise Exception("Could not connect to ADB server")
 
-        root = DevicePath(device, ROOT_DIR)
-        scan_folder(root, config, location, log)
-        break
+    if device is None:
+        raise Exception("ADB device not found")
+
+    if not device.authorised:
+        raise Exception("Device is not authorised for ADB")
+
+    root = DevicePath(device, ROOT_DIR)
+    yield from scan_folder(root, config, location)
