@@ -48,36 +48,6 @@ export default function App() {
 			</div>
 
 			<Toaster position="top-center" />
-
-			<div className="fixed flex flex-col gap-1 bottom-4 right-4">
-				<div
-					className="bg-red-700"
-					onClick={() => {
-						backendApi.connectToADB().then((r) => console.log(r));
-					}}
-				>
-					connect
-				</div>
-				<div
-					className="bg-cyan-700"
-					onClick={() => {
-						backendApi.getDevices().then((r) => console.log(r));
-					}}
-				>
-					devices
-				</div>
-				<div
-					className="bg-purple-700"
-					onClick={() => {
-						backendApi.backup(
-							(u) => console.log("update", u),
-							(e) => console.log("error", e)
-						);
-					}}
-				>
-					backup
-				</div>
-			</div>
 		</>
 	);
 }

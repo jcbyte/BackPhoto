@@ -1,12 +1,9 @@
 import { CircleAlertIcon, CircleCheckIcon, InfoIcon, OctagonAlertIcon } from "lucide-react";
 
-export interface LogEntry {
-	timestamp: string;
-	type: "info" | "success" | "error" | "warning";
-	message: string;
-}
+import { type LogEntry } from "@/../electron/backendApi";
+export type { LogEntry };
 
-export default function LogItem({ entry }: { entry: LogEntry }) {
+export default function LogItem({ log }: { log: LogEntry }) {
 	const getLogIcon = (type: LogEntry["type"]) => {
 		switch (type) {
 			case "success":
@@ -22,10 +19,12 @@ export default function LogItem({ entry }: { entry: LogEntry }) {
 
 	return (
 		<div className="flex gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-			{getLogIcon(entry.type)}
+			{getLogIcon(log.type)}
 			<div className="flex-1 flex flex-col gap-1">
-				<span className="text-xs text-muted-foreground font-mono">{entry.timestamp}</span>
-				<span className="text-sm">{entry.message}</span>
+				<span className="text-xs text-muted-foreground font-mono">
+					{new Date(log.timestamp * 1000).toLocaleTimeString()}
+				</span>
+				<span className="text-sm">{log.content}</span>
 			</div>
 		</div>
 	);

@@ -19,10 +19,10 @@ export default function Home() {
 	const [isRunning, setIsRunning] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [logs, setLogs] = useState<LogEntry[]>([
-		{ timestamp: "14:32:15", type: "info", message: "ADB Device Manager initialized" },
-		{ timestamp: "14:32:16", type: "success", message: "Found 3 connected devices" },
-		{ timestamp: "14:32:17", type: "warning", message: "Device authorization required for Pixel 7 Pro" },
-		{ timestamp: "14:32:17", type: "error", message: "ERR Pixel 7 Pro" },
+		{ timestamp: 1756509838, type: "info", content: "ADB Device Manager initialized" },
+		{ timestamp: 234, type: "success", content: "Found 3 connected devices" },
+		{ timestamp: 234, type: "warning", content: "Device authorization required for Pixel 7 Pro" },
+		{ timestamp: 234, type: "error", content: "ERR Pixel 7 Pro" },
 	]);
 
 	async function refreshDevices() {
@@ -152,7 +152,7 @@ export default function Home() {
 							<ScrollArea className="min-h-40 max-h-[calc(100vh-30rem)] overflow-auto">
 								<div className="flex flex-col gap-2">
 									{logs.map((log, i) => (
-										<LogItem key={`log-${i}`} entry={log} />
+										<LogItem key={`log-${i}`} log={log} />
 									))}
 								</div>
 							</ScrollArea>

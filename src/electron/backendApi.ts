@@ -15,13 +15,15 @@ export type AdbDevice = {
 	serial: string;
 } & ({ authorised: true; name: string } | { authorised: false });
 
+export interface LogEntry {
+	timestamp: number;
+	type: "info" | "success" | "error" | "warning";
+	content: string;
+}
+
 export interface BackupStreamedResponse {
 	progress?: number;
-	log?: {
-		timestamp: number;
-		type: "info" | "success" | "error" | "warning";
-		content: string;
-	};
+	log?: LogEntry;
 }
 
 ipcMain.handle("backendApi.connectToADB", async (_event): Promise<BackendResponse> => {
