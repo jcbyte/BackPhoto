@@ -6,8 +6,7 @@ import BackendNotRunning from "@/pages/BackendNotRunning";
 import Home from "@/pages/Home";
 import Loading from "@/pages/Loading";
 import Options from "@/pages/Options";
-import type { LucideIcon } from "lucide-react";
-import { HomeIcon, MoonIcon, SettingsIcon, SunIcon } from "lucide-react";
+import { HomeIcon, MoonIcon, SettingsIcon, SunIcon, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 type Tab = "home" | "options";
@@ -66,7 +65,7 @@ export default function App() {
 							</Button>
 						</div>
 
-						<div className="flex-1 container mx-auto min-h-screen min-w-sm">
+						<div className="flex-1 h-screen overflow-y-auto">
 							<ActiveComponent />
 						</div>
 					</div>

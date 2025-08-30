@@ -20,7 +20,12 @@ export default function Home() {
 
 	const [isRunning, setIsRunning] = useState(false);
 	const [progress, setProgress] = useState(0);
-	const [logs, setLogs] = useState<LogEntry[]>([]);
+	const [logs, setLogs] = useState<LogEntry[]>([
+		{ timestamp: 0, content: "success", type: "success" },
+		{ timestamp: 0, content: "error", type: "error" },
+		{ timestamp: 0, content: "info", type: "info" },
+		{ timestamp: 0, content: "warning", type: "warning" },
+	]);
 
 	async function refreshDevices() {
 		const res = await backendApi.getDevices();
@@ -73,7 +78,7 @@ export default function Home() {
 	}
 
 	return (
-		<div className="p-6 flex flex-col gap-4">
+		<div className="container mx-auto p-6 flex flex-col gap-4">
 			{/* Header */}
 			<div className="flex flex-col">
 				<h1 className="text-3xl font-bold tracking-tight">BackPhoto</h1>
@@ -103,9 +108,9 @@ export default function Home() {
 													<SelectItem key={device.serial} value={device.serial} disabled={!device.authorised}>
 														<div className="flex items-center gap-2">
 															{device.authorised ? (
-																<CircleCheckIcon className="h-4 w-4 text-green-500" />
+																<CircleCheckIcon className="h-4 w-4 text-success" />
 															) : (
-																<CircleAlertIcon className="h-4 w-4 text-yellow-500 " />
+																<CircleAlertIcon className="h-4 w-4 text-warning" />
 															)}
 															<span>{device.authorised ? device.name : device.serial}</span>
 														</div>
@@ -114,8 +119,8 @@ export default function Home() {
 												{userConfig.adbDevice && !devices.some((device) => device.serial === userConfig.adbDevice) ? (
 													<SelectItem value={userConfig.adbDevice} disabled>
 														<div className="flex items-center gap-2">
-															<CircleAlertIcon className="h-4 w-4 text-gray-400" />
-															<span className="text-gray-400">{userConfig.adbDevice}</span>
+															<CircleAlertIcon className="h-4 w-4 text-muted-foreground" />
+															<span className="text-muted-foreground">{userConfig.adbDevice}</span>
 														</div>
 													</SelectItem>
 												) : (

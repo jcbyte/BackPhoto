@@ -7,13 +7,13 @@ export default function LogItem({ log }: { log: LogEntry }) {
 	const getLogIcon = (type: LogEntry["type"]) => {
 		switch (type) {
 			case "success":
-				return <CircleCheckIcon className="h-4 w-4 text-green-500 shrink-0" />;
+				return <CircleCheckIcon className="h-4 w-4 text-success shrink-0" />;
 			case "warning":
-				return <CircleAlertIcon className="h-4 w-4 text-yellow-500 shrink-0" />;
+				return <CircleAlertIcon className="h-4 w-4 text-warning shrink-0" />;
 			case "error":
-				return <OctagonAlertIcon className="h-4 w-4 text-red-500 shrink-0" />;
+				return <OctagonAlertIcon className="h-4 w-4 text-destructive shrink-0" />;
 			case "info":
-				return <InfoIcon className="h-4 w-4 text-blue-500 shrink-0" />;
+				return <InfoIcon className="h-4 w-4 text-info shrink-0" />;
 		}
 	};
 

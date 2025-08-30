@@ -19,7 +19,7 @@ export default function BackendNotRunning() {
 			<Card className="w-96 shadow-lg">
 				<CardContent className="flex flex-col items-center gap-6">
 					<div className="flex flex-col items-center">
-						<OctagonAlertIcon className="h-10 w-10 text-red-500" />
+						<OctagonAlertIcon className="h-10 w-10 text-destructive" />
 						<span className="text-lg font-semibold">Backend Error</span>
 						<span className="text-sm text-muted-foreground">A backend service is not running.</span>
 					</div>
