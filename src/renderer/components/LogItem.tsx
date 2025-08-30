@@ -7,25 +7,27 @@ export default function LogItem({ log }: { log: LogEntry }) {
 	const getLogIcon = (type: LogEntry["type"]) => {
 		switch (type) {
 			case "success":
-				return <CircleCheckIcon className="h-4 w-4 text-green-500" />;
+				return <CircleCheckIcon className="h-4 w-4 text-green-500 shrink-0" />;
 			case "warning":
-				return <CircleAlertIcon className="h-4 w-4 text-yellow-500" />;
+				return <CircleAlertIcon className="h-4 w-4 text-yellow-500 shrink-0" />;
 			case "error":
-				return <OctagonAlertIcon className="h-4 w-4 text-red-500" />;
+				return <OctagonAlertIcon className="h-4 w-4 text-red-500 shrink-0" />;
 			case "info":
-				return <InfoIcon className="h-4 w-4 text-blue-500" />;
+				return <InfoIcon className="h-4 w-4 text-blue-500 shrink-0" />;
 		}
 	};
 
 	return (
-		<div className="flex gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+		<div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
 			{getLogIcon(log.type)}
-			<div className="flex-1 flex flex-col gap-1">
-				<span className="text-xs text-muted-foreground font-mono">
-					{new Date(log.timestamp * 1000).toLocaleTimeString()}
-				</span>
-				<span className="text-sm">{log.content}</span>
-			</div>
+			<span className="text-xs text-muted-foreground font-mono tabular-nums w-16 shrink-0">
+				{new Date(log.timestamp * 1000).toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+					second: "2-digit",
+				})}
+			</span>
+			<span className="text-sm">{log.content}</span>
 		</div>
 	);
 }

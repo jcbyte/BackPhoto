@@ -170,7 +170,7 @@ export default function Home() {
 							<CardTitle>Activity Log</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<ScrollArea className="min-h-40 max-h-[calc(100vh-30rem)] overflow-auto">
+							<ScrollArea className="min-h-40 max-h-[calc(100vh-30rem)] px-1.5 overflow-auto">
 								<div className="flex flex-col gap-2">
 									{logs.map((log, i) => (
 										<LogItem key={`log-${i}`} log={log} />
