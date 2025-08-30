@@ -12,8 +12,8 @@ export default function DescriptiveSwitch({
 	description?: string;
 }) {
 	return (
-		<div className="flex items-center gap-2">
-			<Switch checked={checked} onCheckedChange={onChange} />
+		<div className="flex items-center gap-2" onClick={() => onChange(!checked)}>
+			<Switch checked={checked} />
 			<div className="flex flex-col">
 				<span className="text-sm font-medium">{title}</span>
 				{description && <span className="text-xs text-muted-foreground">{description}</span>}
