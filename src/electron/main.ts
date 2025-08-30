@@ -12,7 +12,8 @@ if (require("electron-squirrel-startup")) {
 }
 
 import "./backendApi";
-import "./storage";
+import "./electronApi";
+import "./storageApi";
 
 const createWindow = (): void => {
 	// Create the browser window

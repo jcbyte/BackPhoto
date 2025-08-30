@@ -1,8 +1,12 @@
 import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./backendApi";
-import type { UserConfig } from "./storage";
+import type { UserConfig } from "./storageApi";
 
 declare global {
 	namespace electronApi {
+		function pickFolder(): Promise<string | null>;
+	}
+
+	namespace storageApi {
 		function getConfig(): Promise<UserConfig>;
 		function updateConfig(updates: Partial<UserConfig>): Promise<UserConfig>;
 	}

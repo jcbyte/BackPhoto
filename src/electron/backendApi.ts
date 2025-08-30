@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { EventSource } from "eventsource";
-import { getUserConfig } from "./storage";
+import { getUserConfig } from "./storageApi";
 const API_URL = "http://localhost:8000";
 
 export type BackendSuccessResponse<T = void> = { ok: true } & (T extends void ? {} : { data: T });

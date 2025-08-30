@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-import type { UserConfig } from "@/../electron/storage";
+import type { UserConfig } from "@/../electron/storageApi";
 export type { UserConfig };
 
 interface UserConfigContextType {
@@ -15,14 +15,14 @@ export function UserConfigProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		async function loadUserConfig() {
-			const config = await electronApi.getConfig();
+			const config = await storageApi.getConfig();
 			setUserConfig(config);
 		}
 		loadUserConfig();
 	}, []);
 
 	async function updateUserConfig(updates: Partial<UserConfig>) {
-		const config = await electronApi.updateConfig(updates);
+		const config = await storageApi.updateConfig(updates);
 		setUserConfig(config);
 	}
 

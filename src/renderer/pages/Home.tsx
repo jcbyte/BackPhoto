@@ -17,17 +17,14 @@ export default function Home() {
 	const { userConfig, updateUserConfig } = useUserConfig();
 
 	const [devices, setDevices] = useState<AdbDevice[]>([]);
+	const [refreshingDevices, setRefreshingDevices] = useState<boolean>(false);
 
 	const [isRunning, setIsRunning] = useState(false);
 	const [progress, setProgress] = useState(0);
-	const [logs, setLogs] = useState<LogEntry[]>([
-		{ timestamp: 0, content: "success", type: "success" },
-		{ timestamp: 0, content: "error", type: "error" },
-		{ timestamp: 0, content: "info", type: "info" },
-		{ timestamp: 0, content: "warning", type: "warning" },
-	]);
+	const [logs, setLogs] = useState<LogEntry[]>([]);
 
 	async function refreshDevices() {
+		setRefreshingDevices(true);
 		const res = await backendApi.getDevices();
 
 		if (!res.ok) {
@@ -39,7 +36,15 @@ export default function Home() {
 			return;
 		}
 
+		setRefreshingDevices(false);
 		setDevices(res.data);
+	}
+
+	async function selectFolder() {
+		const folderPath = await electronApi.pickFolder();
+		if (!folderPath) return;
+
+		updateUserConfig({ destinationPath: folderPath });
 	}
 
 	function addLog(log: Omit<LogEntry, "timestamp"> & { timestamp?: number }) {
@@ -134,8 +139,8 @@ export default function Home() {
 												)}
 											</SelectContent>
 										</Select>
-										<Button variant="outline" size="icon" onClick={refreshDevices}>
-											<RefreshCw className="h-4 w-4" />
+										<Button variant="outline" size="icon" onClick={refreshDevices} disabled={refreshingDevices}>
+											<RefreshCw className={`h-4 w-4 ${refreshingDevices && "animate-spin"}`} />
 										</Button>
 									</div>
 
@@ -148,8 +153,7 @@ export default function Home() {
 												value={userConfig.destinationPath}
 												onChange={(e) => updateUserConfig({ destinationPath: e.target.value })}
 											/>
-											<Button variant="outline" size="icon">
-												{/* // todo */}
+											<Button variant="outline" size="icon" onClick={selectFolder}>
 												<FolderOpen className="h-4 w-4" />
 											</Button>
 										</div>

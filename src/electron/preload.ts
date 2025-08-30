@@ -3,12 +3,16 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./backendApi";
-import type { UserConfig } from "./storage";
+import type { UserConfig } from "./storageApi";
 
 contextBridge.exposeInMainWorld("electronApi", {
-	getConfig: (): Promise<UserConfig> => ipcRenderer.invoke("electronApi.getConfig"),
+	pickFolder: (): Promise<string | null> => ipcRenderer.invoke("electronApi.pickFolder"),
+});
+
+contextBridge.exposeInMainWorld("storageApi", {
+	getConfig: (): Promise<UserConfig> => ipcRenderer.invoke("storageApi.getConfig"),
 	updateConfig: (updates: Partial<UserConfig>): Promise<UserConfig> =>
-		ipcRenderer.invoke("electronApi.updateConfig", updates),
+		ipcRenderer.invoke("storageApi.updateConfig", updates),
 });
 
 contextBridge.exposeInMainWorld("backendApi", {
