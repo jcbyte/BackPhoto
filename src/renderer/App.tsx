@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { useBackendRunning } from "@/hooks/BackendRunningProvider";
+import { useTheme } from "@/hooks/ThemeProvider";
 import BackendNotRunning from "@/pages/BackendNotRunning";
 import Home from "@/pages/Home";
 import Loading from "@/pages/Loading";
 import Options from "@/pages/Options";
 import type { LucideIcon } from "lucide-react";
-import { HomeIcon, SettingsIcon } from "lucide-react";
+import { HomeIcon, MoonIcon, SettingsIcon, SunIcon } from "lucide-react";
 import { useState } from "react";
 
 type Tab = "home" | "options";
@@ -21,6 +22,7 @@ const TAB_CONFIG: Record<Tab, TabConfig> = {
 
 export default function App() {
 	const { isLoading: backendLoading, backendRunning } = useBackendRunning();
+	const { theme, setTheme } = useTheme();
 
 	const [activeTab, setActiveTab] = useState<Tab>("home");
 	const ActiveComponent = TAB_CONFIG[activeTab].component;
@@ -53,6 +55,15 @@ export default function App() {
 									</Button>
 								);
 							})}
+
+							<Button
+								size="icon"
+								variant="outline"
+								className="mt-auto w-10 h-10"
+								onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+							>
+								{theme === "light" ? <MoonIcon /> : <SunIcon />}
+							</Button>
 						</div>
 
 						<div className="flex-1 container mx-auto min-h-screen min-w-sm">

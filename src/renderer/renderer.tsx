@@ -33,15 +33,18 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { BackendRunningProvider } from "./hooks/BackendRunningProvider";
+import { ThemeProvider } from "./hooks/ThemeProvider";
 import { UserConfigProvider } from "./hooks/UserConfigProvider";
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<BackendRunningProvider>
-			<UserConfigProvider>
-				<App />
-			</UserConfigProvider>
-		</BackendRunningProvider>
+		<ThemeProvider defaultTheme="dark">
+			<BackendRunningProvider>
+				<UserConfigProvider>
+					<App />
+				</UserConfigProvider>
+			</BackendRunningProvider>
+		</ThemeProvider>
 	</StrictMode>
 );
 
