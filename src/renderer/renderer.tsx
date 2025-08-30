@@ -32,13 +32,16 @@ import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { BackendRunningProvider } from "./hooks/BackendRunningProvider";
 import { UserConfigProvider } from "./hooks/UserConfigProvider";
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<UserConfigProvider>
-			<App />
-		</UserConfigProvider>
+		<BackendRunningProvider>
+			<UserConfigProvider>
+				<App />
+			</UserConfigProvider>
+		</BackendRunningProvider>
 	</StrictMode>
 );
 

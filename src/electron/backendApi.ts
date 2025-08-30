@@ -4,7 +4,7 @@ import { getUserConfig } from "./storage";
 const API_URL = "http://localhost:8000";
 
 export type BackendSuccessResponse<T = void> = { ok: true } & (T extends void ? {} : { data: T });
-export type BackendErrorResponse = { ok: false; detail: string };
+export type BackendErrorResponse = { ok: false; detail: string; backendError?: "python" | "adb" | "adbInit" };
 export type BackendResponse<T = void> = BackendSuccessResponse<T> | BackendErrorResponse;
 
 export interface BackendApiError {
@@ -26,18 +26,27 @@ export interface BackupStreamedResponse {
 	log?: LogEntry;
 }
 
+export interface BackupError {
+	status: number;
+	detail: string;
+}
+
 ipcMain.handle("backendApi.connectToADB", async (_event): Promise<BackendResponse> => {
 	try {
 		const res = await fetch(`${API_URL}/connect`, { method: "POST" });
 
 		if (!res.ok) {
 			const data = (await res.json().catch(() => ({}))) as BackendApiError; // `catch` fallback if JSON invalid
-			return { ok: false, detail: data.detail ?? "Error connecting to ADB" };
+			return {
+				ok: false,
+				detail: data.detail ?? "Error connecting to ADB",
+				...(res.status === 503 && { backendError: "adb" }),
+			};
 		}
 
 		return { ok: true };
 	} catch {
-		return { ok: false, detail: "Unknown error connecting to ADB - Is the backend running?" };
+		return { ok: false, detail: "Unknown error connecting to ADB - Is the backend running?", backendError: "python" };
 	}
 });
 
@@ -49,12 +58,17 @@ ipcMain.handle("backendApi.getDevices", async (_event): Promise<BackendResponse<
 		const data = (await res.json().catch(() => ({}))) as ExpectedResponse | BackendApiError; // `catch` fallback if JSON invalid
 
 		if (!res.ok) {
-			return { ok: false, detail: (data as BackendApiError).detail ?? "Error fetching devices" };
+			return {
+				ok: false,
+				detail: (data as BackendApiError).detail ?? "Error fetching devices",
+				...(res.status === 503 && { backendError: "adb" }),
+				...(res.status === 409 && { backendError: "adbInit" }),
+			};
 		}
 
 		return { ok: true, data: (data as ExpectedResponse).devices };
 	} catch {
-		return { ok: false, detail: "Unknown error fetching devices - Is the backend running?" };
+		return { ok: false, detail: "Unknown error fetching devices - Is the backend running?", backendError: "python" };
 	}
 });
 
@@ -80,7 +94,7 @@ ipcMain.handle("backendApi.backup", async (event): Promise<BackendResponse> => {
 			return { ok: false, detail: (data as BackendApiError).detail ?? "Error starting backup" };
 		}
 	} catch {
-		return { ok: false, detail: "Unknown error starting the backup - Is the backend running?" };
+		return { ok: false, detail: "Unknown error starting the backup - Is the backend running?", backendError: "python" };
 	}
 
 	// SSE on backup
@@ -100,8 +114,18 @@ ipcMain.handle("backendApi.backup", async (event): Promise<BackendResponse> => {
 		};
 
 		es.addEventListener("backend-error", (ev) => {
-			const data = ev.data as string;
-			resolve({ ok: false, detail: data });
+			try {
+				const data = JSON.parse(ev.data) as BackupError;
+				resolve({
+					ok: false,
+					detail: data.detail,
+					...(data.status === 503 && { backendError: "adb" }),
+					...(data.status === 409 && { backendError: "adbInit" }),
+				});
+			} catch {
+				// Malformed data received from SSE
+				resolve({ ok: false, detail: ev.data });
+			}
 			es.close();
 		});
 
@@ -111,7 +135,7 @@ ipcMain.handle("backendApi.backup", async (event): Promise<BackendResponse> => {
 		});
 
 		es.onerror = (_ev) => {
-			resolve({ ok: false, detail: "Unknown error trying backup - Is the backend running?" });
+			resolve({ ok: false, detail: "Unknown error trying backup - Is the backend running?", backendError: "python" });
 			es.close();
 		};
 	});

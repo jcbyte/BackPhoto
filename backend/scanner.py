@@ -4,6 +4,8 @@ from pathlib import Path, PurePosixPath
 from typing import Generator
 
 from adb import ADB, DevicePath
+from fastapi import HTTPException
+from server import ADB_NO_CONNECTION
 from typings import BackupYield, LogEntry, UserConfig
 
 TEMP_FOLDER = "temp"
@@ -93,7 +95,7 @@ def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[Backu
     try:
         device = adb.get_device(config.adbDevice)
     except:
-        raise Exception("Could not connect to ADB server")
+        raise HTTPException(status_code=ADB_NO_CONNECTION, detail="Could not connect to ADB server")
 
     if device is None:
         raise Exception("ADB device not found")
@@ -102,4 +104,10 @@ def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[Backu
         raise Exception("Device is not authorised for ADB")
 
     root = DevicePath(device, ROOT_DIR)
-    yield from scan_folder(root, config, location)
+    try:
+        yield from scan_folder(root, config, location)
+    except:
+        if adb.is_alive():
+            raise Exception("ADB device was disconnected")
+        else:
+            raise HTTPException(status_code=ADB_NO_CONNECTION, detail="Could not connect to ADB server")

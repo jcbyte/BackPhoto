@@ -1,3 +1,4 @@
+import json
 import shutil
 import time
 from pathlib import Path
@@ -28,6 +29,9 @@ class AppState(BaseModel):
 app = FastAPI()
 app.state.data = AppState()
 
+ADB_NOT_INITIALISED = 409
+ADB_NO_CONNECTION = 503
+
 
 def get_app_state(request: Request) -> AppState:
     return request.app.state.data
@@ -38,7 +42,7 @@ async def connect(host: str = Query("127.0.0.1", description="ADB server host"),
     state.adb = ADB(host, port)
 
     if not state.adb.is_alive():
-        raise HTTPException(status_code=400, detail="Could not connect to ADB server")
+        raise HTTPException(status_code=ADB_NO_CONNECTION, detail="Could not connect to ADB server")
 
     return {}
 
@@ -46,7 +50,7 @@ async def connect(host: str = Query("127.0.0.1", description="ADB server host"),
 @app.get("/devices")
 async def devices(state: AppState = Depends(get_app_state)):
     if state.adb is None:
-        raise HTTPException(status_code=400, detail="ADB is not initialised")
+        raise HTTPException(status_code=ADB_NOT_INITIALISED, detail="ADB is not initialised")
 
     try:
         devices = state.adb.get_devices()
@@ -63,7 +67,7 @@ async def devices(state: AppState = Depends(get_app_state)):
         }
 
     except:
-        raise HTTPException(status_code=400, detail="Could not connect to ADB server")
+        raise HTTPException(status_code=ADB_NO_CONNECTION, detail="Could not connect to ADB server")
 
 
 @app.post("/backup/start")
@@ -75,14 +79,6 @@ async def backup_start(body: BackupData, state: AppState = Depends(get_app_state
 
 @app.get("/backup")
 async def backup(jobId: str = Query("", description="ID given from `/backup/start` containing configuration"), state: AppState = Depends(get_app_state)):
-    backup_data = state.backup_jobs.pop(jobId, None)
-    if backup_data is None:
-        raise HTTPException(status_code=400, detail="jobId does not correspond to a given backup job")
-
-    adb = state.adb
-    if adb is None:
-        raise HTTPException(status_code=400, detail="ADB is not initialised")
-
     def get_stage_progress_range(stage_weights: dict[str, float]) -> dict[str, tuple[float, float]]:
         # * Ensure Python 3.7+ for ordered dictionaries
         total = sum(stage_weights.values())
@@ -121,12 +117,26 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
         return f"data: {response.model_dump_json(exclude_none=True)}\n\n"
 
     def yield_error(e: Exception):
-        return f"event: backend-error\ndata: {str(e)}\n\n"
+        if isinstance(e, HTTPException):
+            data = json.dumps({"status": e.status_code, "detail": e.detail})
+        else:
+            data = json.dumps({"status": 400, "detail": str(e)})
+        return f"event: backend-error\ndata: {data}\n\n"
 
     def yield_complete():
         return f"event: backend-complete\n\n"
 
     async def event_generator():
+        backup_data = state.backup_jobs.pop(jobId, None)
+        if backup_data is None:
+            yield yield_error(HTTPException(status_code=400, detail="jobId does not correspond to a given backup job"))
+            return
+
+        adb = state.adb
+        if adb is None:
+            yield yield_error(HTTPException(status_code=ADB_NOT_INITIALISED, detail="ADB is not initialised"))
+            return
+
         # Create temporary working folder
         now = time.strftime("%Y-%m-%d_%H-%M-%S")
         folder_path = Path(".", f".temp_{now}")

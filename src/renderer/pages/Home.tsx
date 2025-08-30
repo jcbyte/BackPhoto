@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useBackendRunning } from "@/hooks/BackendRunningProvider";
 import { useUserConfig } from "@/hooks/UserConfigProvider";
 import { CircleAlertIcon, CircleCheckIcon, FolderOpen, LogsIcon, Play, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import Loading from "./Loading";
 
 export default function Home() {
+	const { markBackendDown } = useBackendRunning();
 	const { userConfig, updateUserConfig } = useUserConfig();
 
 	const [devices, setDevices] = useState<AdbDevice[]>([]);
@@ -22,15 +24,24 @@ export default function Home() {
 
 	async function refreshDevices() {
 		const res = await backendApi.getDevices();
+
 		if (!res.ok) {
-			throw "handle err";
+			if (res.backendError) {
+				markBackendDown();
+			}
+
+			addLog({ content: res.detail, type: "error" });
+			return;
 		}
 
 		setDevices(res.data);
 	}
 
-	function addLog(log: LogEntry) {
-		setLogs((prev) => [log, ...prev]);
+	function addLog(log: Omit<LogEntry, "timestamp"> & { timestamp?: number }) {
+		if (!log.timestamp) {
+			log.timestamp = Date.now() / 1000;
+		}
+		setLogs((prev) => [log as LogEntry, ...prev]);
 	}
 
 	async function backup() {
@@ -43,7 +54,11 @@ export default function Home() {
 		});
 
 		if (!res.ok) {
-			addLog({ content: res.detail, type: "error", timestamp: Date.now() / 1000 });
+			if (res.backendError) {
+				markBackendDown();
+			}
+
+			addLog({ content: res.detail, type: "error" });
 		}
 
 		setIsRunning(false);

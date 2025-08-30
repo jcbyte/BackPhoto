@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import BackendNotRunning from "@/pages/BackendNotRunning";
 import Home from "@/pages/Home";
 import Options from "@/pages/Options";
 import type { LucideIcon } from "lucide-react";
 import { HomeIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
+import { useBackendRunning } from "./hooks/BackendRunningProvider";
 
 type Tab = "home" | "options";
 interface TabConfig {
@@ -17,34 +19,40 @@ const TAB_CONFIG: Record<Tab, TabConfig> = {
 };
 
 export default function App() {
+	const { backendRunning } = useBackendRunning();
+
 	const [activeTab, setActiveTab] = useState<Tab>("home");
 	const ActiveComponent = TAB_CONFIG[activeTab].component;
 
 	return (
 		<>
 			<div className="min-h-screen bg-background">
-				<div className="flex">
-					<div className="w-16 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col items-center gap-4 py-4">
-						{(Object.keys(TAB_CONFIG) as Tab[]).map((tab) => {
-							const Icon = TAB_CONFIG[tab].icon;
-							return (
-								<Button
-									key={tab}
-									variant={tab === activeTab ? "default" : "ghost"}
-									size="icon"
-									onClick={() => setActiveTab(tab)}
-									className="w-10 h-10"
-								>
-									<Icon className="h-5 w-5" />
-								</Button>
-							);
-						})}
-					</div>
+				{backendRunning ? (
+					<div className="flex">
+						<div className="w-16 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col items-center gap-4 py-4">
+							{(Object.keys(TAB_CONFIG) as Tab[]).map((tab) => {
+								const Icon = TAB_CONFIG[tab].icon;
+								return (
+									<Button
+										key={tab}
+										variant={tab === activeTab ? "default" : "ghost"}
+										size="icon"
+										onClick={() => setActiveTab(tab)}
+										className="w-10 h-10"
+									>
+										<Icon className="h-5 w-5" />
+									</Button>
+								);
+							})}
+						</div>
 
-					<div className="flex-1 container mx-auto min-h-screen min-w-sm">
-						<ActiveComponent />
+						<div className="flex-1 container mx-auto min-h-screen min-w-sm">
+							<ActiveComponent />
+						</div>
 					</div>
-				</div>
+				) : (
+					<BackendNotRunning />
+				)}
 			</div>
 
 			<Toaster position="top-center" />
