@@ -124,7 +124,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
         return f"event: backend-error\ndata: {data}\n\n"
 
     def yield_complete():
-        return f"event: backend-complete\n\n"
+        return f"event: backend-complete\ndata: \n\n"
 
     async def event_generator():
         backup_data = state.backup_jobs.pop(jobId, None)

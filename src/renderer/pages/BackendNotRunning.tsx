@@ -10,7 +10,7 @@ export default function BackendNotRunning() {
 
 	async function handleTryFix() {
 		setTryingFix(true);
-		await tryFix;
+		await tryFix();
 		setTryingFix(false);
 	}
 

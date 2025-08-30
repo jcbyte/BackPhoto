@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface BackendRunningContextType {
 	backendRunning: boolean;
@@ -9,7 +9,16 @@ interface BackendRunningContextType {
 const BackendRunningContext = createContext<BackendRunningContextType | undefined>(undefined);
 
 export function BackendRunningProvider({ children }: { children: ReactNode }) {
-	const [backendRunning, setBackendRunning] = useState<boolean>(true);
+	const [backendRunning, setBackendRunning] = useState<boolean>(false);
+
+	useEffect(() => {
+		async function checkRunning() {
+			const res = await backendApi.connectToADB();
+			setBackendRunning(res.ok);
+		}
+
+		checkRunning();
+	}, []);
 
 	async function tryFix(): Promise<boolean> {
 		const res = await backendApi.connectToADB();

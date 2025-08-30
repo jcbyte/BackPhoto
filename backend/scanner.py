@@ -44,7 +44,9 @@ def get_resolved_path(wanted_filename: Path) -> Path:
     return wanted_filename.parent / new_filename
 
 
-def scan_folder(path: DevicePath, config: UserConfig, destination: Path) -> Generator[BackupYield, None, None]:
+def scan_folder(
+    path: DevicePath, config: UserConfig, destination: Path, depth: int = 0, passed_progress: float = 0, progress_multiplier: float = 1
+) -> Generator[BackupYield, None, None]:
     """Recursively scan a folder and copy/move files based on the configuration given.
 
     Args:
@@ -59,14 +61,19 @@ def scan_folder(path: DevicePath, config: UserConfig, destination: Path) -> Gene
     yield BackupYield(log=LogEntry(content=f"Scanning {path.path}"))
 
     # Iterate though every item in the ADB folder
-    for item in path.list():
-        # Skip if item starts with '.' and we should ignore these
-        if config.skipDot and item.name.startswith("."):
-            continue
+    items = path.list()
 
+    # Skip if item starts with '.' and we should ignore these
+    if config.skipDot:
+        items = [item for item in items if not item.name.startswith(".")]
+    total_item_count = len(items)
+
+    for i, item in enumerate(items):
         if item.is_dir:
             # If item is a folder then recursively call this function to scan though all files.
-            yield from scan_folder(item, config, destination)
+            yield from scan_folder(
+                item, config, destination, depth + 1, passed_progress + (i / total_item_count) * progress_multiplier, progress_multiplier * (1 / total_item_count)
+            )
         else:
             ext = item.suffix.lower()
             # Skip if we should not copy/move this type of file
@@ -79,6 +86,9 @@ def scan_folder(path: DevicePath, config: UserConfig, destination: Path) -> Gene
 
             if item.name != resolved_destination.name:
                 yield BackupYield(log=LogEntry(content=f"Renamed {item.name} to {resolved_destination.name}"))
+
+        if depth < 2:
+            yield BackupYield(progress=(passed_progress + ((i + 1) / total_item_count) * progress_multiplier))
 
 
 def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[BackupYield, None, None]:

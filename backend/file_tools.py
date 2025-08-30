@@ -21,7 +21,10 @@ def move(src: Path, dst: Path, last_updated: str | None = None) -> Generator[Bac
     dst.mkdir(parents=True, exist_ok=True)
 
     # Iterate through every file in source directory
-    for file_path in src.rglob("*"):  # recursively find all files
+    all_files = [f for f in src.rglob("*") if f.is_file()]
+    total_file_count = len(all_files)
+
+    for i, file_path in enumerate(all_files):  # recursively find all files
         if file_path.is_file():
             # Organise file into year and month folders
             photo_exif = load_exif(file_path)
@@ -37,6 +40,8 @@ def move(src: Path, dst: Path, last_updated: str | None = None) -> Generator[Bac
             shutil.copy2(file_path, dst_path)
 
             # yield BackupYield(log=LogEntry(content=f'Uploaded: "{file_path.name}"'))
+            if i % 20 == 0:
+                yield BackupYield(progress=((i + 1) / total_file_count))
 
     # If a last updated text is given then write this into the remote path
     if last_updated:

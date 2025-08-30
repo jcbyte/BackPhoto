@@ -169,7 +169,13 @@ def set_photos_exif_time(folder_path: Path) -> Generator[BackupYield, None, None
     Args:
         folder_path (Path): The path to the folder containing images.
     """
-    for file_path in folder_path.rglob("*"):
-        # skip directories
-        if file_path.is_file():
-            yield from set_photo_exif_time(file_path)
+
+    # Iterate through every file in source directory
+    all_files = [f for f in folder_path.rglob("*") if f.is_file()]
+    total_file_count = len(all_files)
+
+    for i, file_path in enumerate(all_files):
+        yield from set_photo_exif_time(file_path)
+
+        if i % 20 == 0:
+            yield BackupYield(progress=((i + 1) / total_file_count))

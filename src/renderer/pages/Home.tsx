@@ -177,7 +177,7 @@ export default function Home() {
 							<div className="flex flex-col gap-2">
 								<div className="flex justify-between">
 									<span className="text-sm">Progress</span>
-									<span className="text-sm">{Math.floor(progress)}%</span>
+									<span className="text-sm">{Math.floor(progress * 100)}%</span>
 								</div>
 								<Progress value={progress * 100} className="h-2" />
 								<p className="text-sm text-muted-foreground">{isRunning ? "In progress..." : "Ready to start"}</p>
