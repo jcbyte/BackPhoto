@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserConfig } from "@/hooks/UserConfigProvider";
-import { CircleAlertIcon, CircleCheckIcon, FolderOpen, Play, RefreshCw } from "lucide-react";
+import { CircleAlertIcon, CircleCheckIcon, FolderOpen, LogsIcon, Play, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import Loading from "./Loading";
 
@@ -90,19 +90,27 @@ export default function Home() {
 															{device.authorised ? (
 																<CircleCheckIcon className="h-4 w-4 text-green-500" />
 															) : (
-																<CircleAlertIcon className="h-4 w-4 text-yellow-500" />
+																<CircleAlertIcon className="h-4 w-4 text-yellow-500 " />
 															)}
 															<span>{device.authorised ? device.name : device.serial}</span>
 														</div>
 													</SelectItem>
 												))}
-												{userConfig.adbDevice && !devices.some((device) => device.serial === userConfig.adbDevice) && (
+												{userConfig.adbDevice && !devices.some((device) => device.serial === userConfig.adbDevice) ? (
 													<SelectItem value={userConfig.adbDevice} disabled>
 														<div className="flex items-center gap-2">
 															<CircleAlertIcon className="h-4 w-4 text-gray-400" />
 															<span className="text-gray-400">{userConfig.adbDevice}</span>
 														</div>
 													</SelectItem>
+												) : (
+													devices.length === 0 && (
+														<SelectItem value="no-device" disabled>
+															<div className="flex items-center gap-2">
+																<span>No devices connected</span>
+															</div>
+														</SelectItem>
+													)
 												)}
 											</SelectContent>
 										</Select>
@@ -175,6 +183,14 @@ export default function Home() {
 									{logs.map((log, i) => (
 										<LogItem key={`log-${i}`} log={log} />
 									))}
+									{logs.length === 0 && (
+										<div className="flex flex-col gap-1 justify-center items-center pt-6">
+											<div className="w-14 h-14 bg-muted rounded-lg flex justify-center items-center">
+												<LogsIcon className="w-8 h-8" />
+											</div>
+											<span className="text-sm text-muted-foreground">No Logs Yet</span>
+										</div>
+									)}
 								</div>
 							</ScrollArea>
 						</CardContent>
