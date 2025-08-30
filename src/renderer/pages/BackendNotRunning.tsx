@@ -21,11 +21,11 @@ export default function BackendNotRunning() {
 					<div className="flex flex-col items-center">
 						<OctagonAlertIcon className="h-10 w-10 text-red-500" />
 						<span className="text-lg font-semibold">Backend Error</span>
-						<span className="text-sm text-muted-foreground">The backend service is not running.</span>
+						<span className="text-sm text-muted-foreground">A backend service is not running.</span>
 					</div>
 
 					<Button onClick={handleTryFix} className="w-32" disabled={tryingFix}>
-						Try Fix
+						Fix Backend
 					</Button>
 				</CardContent>
 			</Card>

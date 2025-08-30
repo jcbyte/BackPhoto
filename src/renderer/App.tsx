@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { useBackendRunning } from "@/hooks/BackendRunningProvider";
 import BackendNotRunning from "@/pages/BackendNotRunning";
 import Home from "@/pages/Home";
+import Loading from "@/pages/Loading";
 import Options from "@/pages/Options";
 import type { LucideIcon } from "lucide-react";
 import { HomeIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
-import { useBackendRunning } from "./hooks/BackendRunningProvider";
 
 type Tab = "home" | "options";
 interface TabConfig {
@@ -19,10 +20,18 @@ const TAB_CONFIG: Record<Tab, TabConfig> = {
 };
 
 export default function App() {
-	const { backendRunning } = useBackendRunning();
+	const { isLoading: backendLoading, backendRunning } = useBackendRunning();
 
 	const [activeTab, setActiveTab] = useState<Tab>("home");
 	const ActiveComponent = TAB_CONFIG[activeTab].component;
+
+	if (backendLoading) {
+		return (
+			<div className="w-full h-screen">
+				<Loading />
+			</div>
+		);
+	}
 
 	return (
 		<>

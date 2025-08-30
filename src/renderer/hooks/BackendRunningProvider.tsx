@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface BackendRunningContextType {
+	isLoading: boolean;
 	backendRunning: boolean;
 	markBackendDown: () => void;
 	tryFix(): Promise<boolean>;
@@ -9,12 +10,14 @@ interface BackendRunningContextType {
 const BackendRunningContext = createContext<BackendRunningContextType | undefined>(undefined);
 
 export function BackendRunningProvider({ children }: { children: ReactNode }) {
+	const [isLoading, setIsLoading] = useState(true);
 	const [backendRunning, setBackendRunning] = useState<boolean>(false);
 
 	useEffect(() => {
 		async function checkRunning() {
 			const res = await backendApi.connectToADB();
 			setBackendRunning(res.ok);
+			setIsLoading(false);
 		}
 
 		checkRunning();
@@ -38,7 +41,7 @@ export function BackendRunningProvider({ children }: { children: ReactNode }) {
 	}
 
 	return (
-		<BackendRunningContext.Provider value={{ backendRunning, markBackendDown, tryFix }}>
+		<BackendRunningContext.Provider value={{ isLoading: isLoading, backendRunning, markBackendDown, tryFix }}>
 			{children}
 		</BackendRunningContext.Provider>
 	);
