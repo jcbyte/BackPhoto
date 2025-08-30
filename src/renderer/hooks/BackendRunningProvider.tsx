@@ -28,6 +28,7 @@ export function BackendRunningProvider({ children }: { children: ReactNode }) {
 
 		if (!res.ok) {
 			// todo try and fix
+			res.backendError;
 
 			return false;
 		}

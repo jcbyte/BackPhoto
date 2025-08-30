@@ -8,7 +8,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBackendRunning } from "@/hooks/BackendRunningProvider";
 import { useUserConfig } from "@/hooks/UserConfigProvider";
-import { CircleAlertIcon, CircleCheckIcon, FolderOpen, LogsIcon, Play, RefreshCw } from "lucide-react";
+import {
+	CircleAlertIcon,
+	CircleCheckIcon,
+	FolderOpen,
+	LoaderCircleIcon,
+	LogsIcon,
+	Play,
+	RefreshCw,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import Loading from "./Loading";
 
@@ -170,8 +178,8 @@ export default function Home() {
 									size="lg"
 									onClick={backup}
 								>
-									<Play className="h-4 w-4" />
-									{isRunning ? "Running..." : "Back Up"}
+									{isRunning ? <LoaderCircleIcon className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+									Back Up
 								</Button>
 							</div>
 						</CardContent>
