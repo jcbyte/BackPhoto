@@ -60,7 +60,7 @@ ipcMain.handle("backendApi.getDevices", async (_event): Promise<BackendResponse<
 
 let backupEs: EventSource | null = null;
 
-ipcMain.handle("backendApi.backup", async (event): Promise<void> => {
+ipcMain.handle("backendApi.backup", async (event): Promise<BackendResponse> => {
 	type ExpectedResponse = { jobId: string };
 
 	// Get backup jobId
@@ -77,49 +77,42 @@ ipcMain.handle("backendApi.backup", async (event): Promise<void> => {
 		data = (await res.json().catch(() => ({}))) as ExpectedResponse | BackendApiError; // `catch` fallback if JSON invalid
 
 		if (!res.ok) {
-			const error: BackendErrorResponse = {
-				ok: false,
-				detail: (data as BackendApiError).detail ?? "Error starting backup",
-			};
-			event.sender.send("backendApi.backup:error", error);
-			return;
+			return { ok: false, detail: (data as BackendApiError).detail ?? "Error starting backup" };
 		}
 	} catch {
-		const error: BackendErrorResponse = {
-			ok: false,
-			detail: "Unknown error starting the backup - Is the backend running?",
-		};
-		event.sender.send("backendApi.backup:error", error);
-		return;
+		return { ok: false, detail: "Unknown error starting the backup - Is the backend running?" };
 	}
 
 	// SSE on backup
-	if (backupEs) backupEs.close();
-	const params = new URLSearchParams({ jobId: (data as ExpectedResponse).jobId });
-	const es = new EventSource(`${API_URL}/backup?${params.toString()}`);
-	backupEs = es;
+	return new Promise((resolve) => {
+		if (backupEs) backupEs.close();
+		const params = new URLSearchParams({ jobId: (data as ExpectedResponse).jobId });
+		const es = new EventSource(`${API_URL}/backup?${params.toString()}`);
+		backupEs = es;
 
-	function throwEs(error: BackendErrorResponse) {
-		event.sender.send("backendApi.backup:error", error);
-		es.close();
-	}
+		es.onmessage = (ev) => {
+			try {
+				const data = JSON.parse(ev.data) as BackupStreamedResponse;
+				event.sender.send("backendApi.backup:update", data);
+			} catch {
+				// Malformed data received from SSE
+			}
+		};
 
-	es.onmessage = (ev) => {
-		try {
-			const data = JSON.parse(ev.data) as BackupStreamedResponse;
-			event.sender.send("backendApi.backup:update", data);
-		} catch {
-			// Malformed data received from SSE
-		}
-	};
+		es.addEventListener("backend-error", (ev) => {
+			const data = ev.data as string;
+			resolve({ ok: false, detail: data });
+			es.close();
+		});
 
-	es.addEventListener("backend-error", (ev) => {
-		const data = ev.data as string;
-		throwEs({ ok: false, detail: data });
+		es.addEventListener("backend-complete", (_ev) => {
+			resolve({ ok: true });
+			es.close();
+		});
+
+		es.onerror = (_ev) => {
+			resolve({ ok: false, detail: "Unknown error trying backup - Is the backend running?" });
+			es.close();
+		};
 	});
-
-	es.onerror = (_ev) => {
-		throwEs({ ok: false, detail: "Unknown error trying backup - Is the backend running?" });
-		es.close();
-	};
 });

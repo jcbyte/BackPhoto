@@ -18,12 +18,7 @@ export default function Home() {
 
 	const [isRunning, setIsRunning] = useState(false);
 	const [progress, setProgress] = useState(0);
-	const [logs, setLogs] = useState<LogEntry[]>([
-		{ timestamp: 1756509838, type: "info", content: "ADB Device Manager initialized" },
-		{ timestamp: 234, type: "success", content: "Found 3 connected devices" },
-		{ timestamp: 234, type: "warning", content: "Device authorization required for Pixel 7 Pro" },
-		{ timestamp: 234, type: "error", content: "ERR Pixel 7 Pro" },
-	]);
+	const [logs, setLogs] = useState<LogEntry[]>([]);
 
 	async function refreshDevices() {
 		const res = await backendApi.getDevices();
@@ -32,6 +27,26 @@ export default function Home() {
 		}
 
 		setDevices(res.data);
+	}
+
+	function addLog(log: LogEntry) {
+		setLogs((prev) => [log, ...prev]);
+	}
+
+	async function backup() {
+		setIsRunning(true);
+		setProgress(0);
+
+		const res = await backendApi.backup((update) => {
+			if (update.progress) setProgress(update.progress);
+			if (update.log) addLog(update.log);
+		});
+
+		if (!res.ok) {
+			addLog({ content: res.detail, type: "error", timestamp: Date.now() / 1000 });
+		}
+
+		setIsRunning(false);
 	}
 
 	useEffect(() => {
@@ -106,6 +121,7 @@ export default function Home() {
 												onChange={(e) => updateUserConfig({ destinationPath: e.target.value })}
 											/>
 											<Button variant="outline" size="icon">
+												{/* // todo */}
 												<FolderOpen className="h-4 w-4" />
 											</Button>
 										</div>
@@ -113,9 +129,14 @@ export default function Home() {
 								</div>
 
 								<Button
-									disabled={!userConfig.adbDevice || !userConfig.destinationPath.trim() || isRunning}
+									disabled={
+										!devices.find((device) => device.serial === userConfig.adbDevice)?.authorised ||
+										!userConfig.destinationPath.trim() ||
+										isRunning
+									}
 									className="w-full"
 									size="lg"
+									onClick={backup}
 								>
 									<Play className="h-4 w-4" />
 									{isRunning ? "Running..." : "Back Up"}
@@ -135,7 +156,7 @@ export default function Home() {
 									<span className="text-sm">Progress</span>
 									<span className="text-sm">{Math.floor(progress)}%</span>
 								</div>
-								<Progress value={progress} className="h-2" />
+								<Progress value={progress * 100} className="h-2" />
 								<p className="text-sm text-muted-foreground">{isRunning ? "In progress..." : "Ready to start"}</p>
 							</div>
 						</CardContent>

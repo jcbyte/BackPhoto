@@ -120,8 +120,11 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
         )
         return f"data: {response.model_dump_json(exclude_none=True)}\n\n"
 
-    def error_yield(e: Exception):
+    def yield_error(e: Exception):
         return f"event: backend-error\ndata: {str(e)}\n\n"
+
+    def yield_complete():
+        return f"event: backend-complete\n\n"
 
     async def event_generator():
         # Create temporary working folder
@@ -144,7 +147,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
             for y in scanner.scan_device(folder_path, adb, backup_data.config):
                 yield format_yield(y, progress_ranges["scan"])
         except Exception as e:
-            yield error_yield(e)
+            yield yield_error(e)
             return
         yield format_yield(BackupYield(log=LogEntry(content="Device scan completed"), progress=1), progress_ranges["scan"])
 
@@ -155,7 +158,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
                 for y in photo_tools.set_photos_exif_time(folder_path):
                     yield format_yield(y, progress_ranges["exif"])
             except Exception as e:
-                yield error_yield(e)
+                yield yield_error(e)
                 return
             yield format_yield(BackupYield(log=LogEntry(content="Completed EXIF update"), progress=1), progress_ranges["exif"])
 
@@ -165,7 +168,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
             for y in file_tools.move(folder_path, Path(backup_data.config.destinationPath), now):
                 yield format_yield(y, progress_ranges["move"])
         except Exception as e:
-            yield error_yield(e)
+            yield yield_error(e)
             return
         yield format_yield(BackupYield(log=LogEntry(content="Moving files completed"), progress=1), progress_ranges["move"])
 
@@ -176,6 +179,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
             yield format_yield(BackupYield(log=LogEntry(content="Temporary files removed"), progress=1), progress_ranges["removeTemp"])
 
         yield format_yield(BackupYield(log=LogEntry(content="Complete!", type="success"), progress=1))
+        yield yield_complete()
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
