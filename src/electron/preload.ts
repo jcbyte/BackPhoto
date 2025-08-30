@@ -2,8 +2,8 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from "electron";
-import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./backendApi";
-import type { UserConfig } from "./storageApi";
+import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./api/backend";
+import type { UserConfig } from "./api/storage";
 
 contextBridge.exposeInMainWorld("electronApi", {
 	pickFolder: (): Promise<string | null> => ipcRenderer.invoke("electronApi.pickFolder"),

@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
-import type { UserConfig } from "@/../electron/storageApi";
+import type { UserConfig } from "@/../electron/api/storage";
 export type { UserConfig };
 
 interface UserConfigContextType {

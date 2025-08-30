@@ -1,6 +1,6 @@
 import { CircleAlertIcon, CircleCheckIcon, InfoIcon, OctagonAlertIcon } from "lucide-react";
 
-import { type LogEntry } from "@/../electron/backendApi";
+import { type LogEntry } from "@/../electron/api/backend";
 export type { LogEntry };
 
 export default function LogItem({ log }: { log: LogEntry }) {

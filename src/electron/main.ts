@@ -4,18 +4,19 @@ import { app, BrowserWindow } from "electron";
 // whether you're running in development or production).
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-const DEV = !app.isPackaged;
+export const DEV = !app.isPackaged;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
 	app.quit();
 }
 
-import "./backendApi";
-import "./electronApi";
-import "./storageApi";
+import "./api/backend";
+import "./api/electron";
+import { startPythonServer } from "./api/serverManager";
+import "./api/storage";
 
-const createWindow = (): void => {
+const createWindow = async () => {
 	// Create the browser window
 	const mainWindow = new BrowserWindow({
 		width: 1024,
@@ -35,6 +36,8 @@ const createWindow = (): void => {
 		// Open DevTools
 		mainWindow.webContents.openDevTools();
 	}
+
+	await startPythonServer();
 };
 
 // This method will be called when Electron has finished

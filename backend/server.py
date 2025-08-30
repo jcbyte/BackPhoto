@@ -1,6 +1,8 @@
 import json
 import shutil
+import sys
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -24,6 +26,15 @@ class AppState(BaseModel):
     backup_jobs: dict[str, BackupData] = {}
 
     model_config = {"arbitrary_types_allowed": True}
+
+
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     host = app.state.host
+#     port = app.state.port
+#     print(json.dumps({"host": host, "port": port}))
+#     sys.stdout.flush()
+#     yield
 
 
 app = FastAPI()
@@ -194,7 +205,26 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+async def main():
+    config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="info")
+    server = uvicorn.Server(config)
+
+    server_task = asyncio.create_task(server.serve())
+
+    # Wait until server is started
+    while not server.started:
+        await asyncio.sleep(0.01)
+
+    for s in server.servers:
+        host, port = s.sockets[0].getsockname()
+        print(f"NODE_READ_SERVER_READY {json.dumps({"host":host, "port":port})}", flush=True)
+
+    await server_task
+
+
 if __name__ == "__main__":
+    import asyncio
+
     import uvicorn
 
-    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True)
+    asyncio.run(main())

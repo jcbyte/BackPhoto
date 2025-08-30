@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { EventSource } from "eventsource";
-import { getUserConfig } from "./storageApi";
-const API_URL = "http://localhost:8000";
+import { getBackendHost } from "./serverManager";
+import { getUserConfig } from "./storage";
 
 export type BackendSuccessResponse<T = void> = { ok: true } & (T extends void ? {} : { data: T });
 export type BackendErrorResponse = { ok: false; detail: string; backendError?: "python" | "adb" | "adbInit" };
@@ -32,8 +32,11 @@ export interface BackupError {
 }
 
 ipcMain.handle("backendApi.connectToADB", async (_event): Promise<BackendResponse> => {
+	const apiUrl = getBackendHost();
+	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was tha backend started?", backendError: "python" };
+
 	try {
-		const res = await fetch(`${API_URL}/connect`, { method: "POST" });
+		const res = await fetch(`${apiUrl}/connect`, { method: "POST" });
 
 		if (!res.ok) {
 			const data = (await res.json().catch(() => ({}))) as BackendApiError; // `catch` fallback if JSON invalid
@@ -51,10 +54,13 @@ ipcMain.handle("backendApi.connectToADB", async (_event): Promise<BackendRespons
 });
 
 ipcMain.handle("backendApi.getDevices", async (_event): Promise<BackendResponse<AdbDevice[]>> => {
+	const apiUrl = getBackendHost();
+	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was tha backend started?", backendError: "python" };
+
 	type ExpectedResponse = { devices: AdbDevice[] };
 
 	try {
-		const res = await fetch(`${API_URL}/devices`);
+		const res = await fetch(`${apiUrl}/devices`);
 		const data = (await res.json().catch(() => ({}))) as ExpectedResponse | BackendApiError; // `catch` fallback if JSON invalid
 
 		if (!res.ok) {
@@ -75,13 +81,16 @@ ipcMain.handle("backendApi.getDevices", async (_event): Promise<BackendResponse<
 let backupEs: EventSource | null = null;
 
 ipcMain.handle("backendApi.backup", async (event): Promise<BackendResponse> => {
+	const apiUrl = getBackendHost();
+	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was tha backend started?", backendError: "python" };
+
 	type ExpectedResponse = { jobId: string };
 
 	// Get backup jobId
 	let data: ExpectedResponse | BackendApiError;
 	try {
 		const userConfig = getUserConfig();
-		const res = await fetch(`${API_URL}/backup/start`, {
+		const res = await fetch(`${apiUrl}/backup/start`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -101,7 +110,7 @@ ipcMain.handle("backendApi.backup", async (event): Promise<BackendResponse> => {
 	return new Promise((resolve) => {
 		if (backupEs) backupEs.close();
 		const params = new URLSearchParams({ jobId: (data as ExpectedResponse).jobId });
-		const es = new EventSource(`${API_URL}/backup?${params.toString()}`);
+		const es = new EventSource(`${apiUrl}/backup?${params.toString()}`);
 		backupEs = es;
 
 		es.onmessage = (ev) => {

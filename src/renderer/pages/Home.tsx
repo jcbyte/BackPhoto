@@ -1,4 +1,4 @@
-import { type AdbDevice } from "@/../electron/backendApi";
+import { type AdbDevice } from "@/../electron/api/backend";
 import LogItem, { type LogEntry } from "@/components/LogItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

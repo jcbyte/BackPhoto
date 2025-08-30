@@ -1,5 +1,5 @@
-import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./backendApi";
-import type { UserConfig } from "./storageApi";
+import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./api/backend";
+import type { UserConfig } from "./api/storage";
 
 declare global {
 	namespace electronApi {
