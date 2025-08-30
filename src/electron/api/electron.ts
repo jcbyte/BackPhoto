@@ -1,6 +1,6 @@
 import { dialog, ipcMain } from "electron";
 
-ipcMain.handle("electronApi.pickFolder", async (_event) => {
+ipcMain.handle("electron.pickFolder", async (_event) => {
 	const result = await dialog.showOpenDialog({
 		properties: ["openDirectory"],
 	});

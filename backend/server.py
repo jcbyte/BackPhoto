@@ -1,6 +1,7 @@
+import asyncio
 import json
+import os
 import shutil
-import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -10,11 +11,14 @@ from uuid import uuid4
 import file_tools
 import photo_tools
 import scanner
+import uvicorn
 from adb import ADB
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typings import BackupYield, LogEntry, UserConfig
+
+DEV = os.getenv("DEV", "false").lower() == "true"
 
 
 class BackupData(BaseModel):
@@ -26,15 +30,6 @@ class AppState(BaseModel):
     backup_jobs: dict[str, BackupData] = {}
 
     model_config = {"arbitrary_types_allowed": True}
-
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     host = app.state.host
-#     port = app.state.port
-#     print(json.dumps({"host": host, "port": port}))
-#     sys.stdout.flush()
-#     yield
 
 
 app = FastAPI()
@@ -206,7 +201,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
 
 
 async def main():
-    config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="info")
+    config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="info", reload=DEV)
     server = uvicorn.Server(config)
 
     server_task = asyncio.create_task(server.serve())
@@ -223,8 +218,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    import asyncio
-
-    import uvicorn
-
     asyncio.run(main())

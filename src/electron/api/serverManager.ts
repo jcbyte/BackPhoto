@@ -1,5 +1,5 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { app } from "electron";
+import { app, ipcMain } from "electron";
 import { DEV } from "../main";
 
 interface Host {
@@ -15,19 +15,24 @@ export function getBackendHost(): string | null {
 	return `http://${pyHost.hostname}:${pyHost.port}`;
 }
 
+const NODE_SERVER_READY_STRING = "NODE_READ_SERVER_READY";
+
 export function startPythonServer(): Promise<void> {
+	if (py) py.kill();
+
 	// todo need to run not in dev mode
 	const pyPath = "./backend/server.py";
 
-	const NODE_SERVER_READY_STRING = "NODE_READ_SERVER_READY";
-
 	return new Promise((resolve, reject) => {
-		py = spawn("python", [pyPath]);
+		py = spawn("python", [pyPath], { env: { ...(DEV && { DEV: "true" }) } });
 
 		py.stdout.on("data", (data: Buffer) => {
-			const lines = data.toString().split("\n");
+			const lines = data
+				.toString()
+				.split("\n")
+				.filter((line) => line);
 
-			if (DEV) console.log(lines.map((line) => `PYTHON: ${line}`));
+			if (DEV) console.log(lines.map((line) => `[PYTHON]: ${line.trim()}`).join("\n"));
 
 			for (let line of lines) {
 				if (line.startsWith(NODE_SERVER_READY_STRING)) {
@@ -52,6 +57,10 @@ export function startPythonServer(): Promise<void> {
 		});
 	});
 }
+
+ipcMain.handle("serverManager.startBackend", async (_event) => {
+	await startPythonServer();
+});
 
 // Kill Python server when Electron quits
 app.on("before-quit", () => {

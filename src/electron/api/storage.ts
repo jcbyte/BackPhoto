@@ -32,11 +32,11 @@ export function getUserConfig(): UserConfig {
 	return config;
 }
 
-ipcMain.handle("storageApi.getConfig", (_event) => {
+ipcMain.handle("storage.getConfig", (_event) => {
 	return getUserConfig();
 });
 
-ipcMain.handle("storageApi.updateConfig", (_event, updates: Partial<UserConfig>) => {
+ipcMain.handle("storage.updateConfig", (_event, updates: Partial<UserConfig>) => {
 	const currentConfig = store.get("userConfig");
 	const updatedConfig = { ...currentConfig, ...updates };
 

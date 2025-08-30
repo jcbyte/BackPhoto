@@ -2,6 +2,10 @@ import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./api/b
 import type { UserConfig } from "./api/storage";
 
 declare global {
+	namespace serverManagerApi {
+		function startBackend(): Promise<void>;
+	}
+
 	namespace electronApi {
 		function pickFolder(): Promise<string | null>;
 	}

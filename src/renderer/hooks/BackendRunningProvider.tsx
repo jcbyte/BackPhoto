@@ -28,7 +28,9 @@ export function BackendRunningProvider({ children }: { children: ReactNode }) {
 
 		if (!res.ok) {
 			// todo try and fix
-			res.backendError;
+			if (res.backendError === "backend") {
+				await serverManagerApi.startBackend();
+			}
 
 			return false;
 		}
