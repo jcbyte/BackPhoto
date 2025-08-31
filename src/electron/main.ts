@@ -39,6 +39,8 @@ const createWindow = async () => {
 
 	await startPythonServer();
 	await startAdbServer();
+
+	mainWindow.webContents.send("electron.onLoaded");
 };
 
 // This method will be called when Electron has finished

@@ -21,7 +21,7 @@ export function BackendRunningProvider({ children }: { children: ReactNode }) {
 			setIsLoading(false);
 		}
 
-		checkRunning();
+		electronApi.onLoaded(() => checkRunning());
 	}, []);
 
 	async function tryFix(): Promise<boolean> {

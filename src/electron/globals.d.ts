@@ -8,6 +8,7 @@ declare global {
 	}
 
 	namespace electronApi {
+		function onLoaded(callback: () => void): void;
 		function pickFolder(): Promise<string | null>;
 	}
 
