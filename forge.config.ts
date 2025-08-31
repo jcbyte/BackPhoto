@@ -14,10 +14,19 @@ import { rendererConfig } from "./webpack.renderer.config";
 const config: ForgeConfig = {
 	packagerConfig: {
 		asar: true,
-		extraResource: ["./dist"],
+		extraResource: ["./dist", "./icon.png"],
 	},
 	rebuildConfig: {},
-	makers: [new MakerSquirrel({}), new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
+	makers: [
+		new MakerSquirrel({
+			name: "BackPhoto",
+			iconUrl: "./icon.png",
+			setupIcon: "./icon.png",
+		}),
+		new MakerZIP({}, ["darwin"]),
+		new MakerRpm({}),
+		new MakerDeb({}),
+	],
 	plugins: [
 		new AutoUnpackNativesPlugin({}),
 		new WebpackPlugin({

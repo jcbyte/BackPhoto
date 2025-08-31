@@ -87,12 +87,9 @@ ipcMain.handle("serverManager.startBackend", async (_event) => {
 export async function startAdbServer(): Promise<void> {
 	if (adbPort) await killAdbServer(adbPort);
 
-	// todo need to run not in dev mode
-	const adbPath = "C:\\Users\\joel_\\Downloads\\platform-tools-latest-windows\\platform-tools\\adb.exe";
-
 	adbPort = await getPort({ host: "127.0.0.1" });
 	return new Promise((resolve, reject) => {
-		const adb = spawn(adbPath, ["-P", String(adbPort), "start-server"], { env: {} });
+		const adb = spawn(ADB_PATH, ["-P", String(adbPort), "start-server"], { env: {} });
 
 		if (DEV) {
 			adb.stdout.on("data", (data: Buffer) => logStd("ADB-START STDOUT", data));
@@ -112,11 +109,8 @@ export async function startAdbServer(): Promise<void> {
 }
 
 export async function killAdbServer(port: number): Promise<void> {
-	// todo need to run not in dev mode
-	const adbPath = "C:\\Users\\joel_\\Downloads\\platform-tools-latest-windows\\platform-tools\\adb.exe";
-
 	return new Promise((resolve, reject) => {
-		const adb = spawn(adbPath, ["-P", String(port), "kill-server"], { env: {} });
+		const adb = spawn(ADB_PATH, ["-P", String(port), "kill-server"], { env: {} });
 
 		if (DEV) {
 			adb.stdout.on("data", (data: Buffer) => logStd("ADB-KILL STDOUT", data));

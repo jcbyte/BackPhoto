@@ -13,7 +13,7 @@ import yauzl from "yauzl";
 const PLATFORM_CONFIGS = {
 	win32: {
 		url: "https://dl.google.com/android/repository/platform-tools-latest-windows.zip",
-		files: ["adb.exe", "adbwinapi.dll", "adbwinusbapi.dll"],
+		files: ["adb.exe", "AdbWinApi.dll", "AdbWinUsbApi.dll"],
 	},
 	darwin: { url: "https://dl.google.com/android/repository/platform-tools-latest-darwin.zip", files: ["adb"] },
 	linux: { url: "https://dl.google.com/android/repository/platform-tools-latest-linux.zip", files: ["adb"] },
@@ -84,7 +84,7 @@ function extractFiles(src, files, dest) {
 
 			zipfile.on("end", () => {
 				// Finish reading all files
-				console.log(`Finish reading from ${src}`);
+				console.log(`File extraction complete`);
 				resolve();
 			});
 
