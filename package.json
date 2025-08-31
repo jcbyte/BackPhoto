@@ -5,7 +5,10 @@
 	"description": "My Electron application description",
 	"main": ".webpack/main",
 	"scripts": {
+		"build:server": "pyinstaller --onefile --name server --distpath dist/backend backend/server.py",
+		"fetch:adb": "node scripts/fetch-adb.js",
 		"start": "electron-forge start",
+		"prepackage": "npm run build:server && npm run fetch:adb",
 		"package": "electron-forge package",
 		"make": "electron-forge make",
 		"publish": "electron-forge publish",
@@ -29,6 +32,7 @@
 		"@electron/fuses": "^1.8.0",
 		"@tailwindcss/postcss": "^4.1.12",
 		"@types/conf": "^2.1.0",
+		"@types/node": "^24.3.0",
 		"@types/react": "^19.1.11",
 		"@types/react-dom": "^19.1.7",
 		"@typescript-eslint/eslint-plugin": "^5.62.0",
@@ -45,7 +49,8 @@
 		"style-loader": "^3.3.4",
 		"tailwindcss": "^4.1.12",
 		"ts-loader": "^9.5.4",
-		"typescript": "~4.5.4"
+		"typescript": "~4.5.4",
+		"yauzl": "^3.2.0"
 	},
 	"dependencies": {
 		"@fontsource-variable/inter": "^5.2.6",
