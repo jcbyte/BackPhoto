@@ -124,7 +124,7 @@ ipcMain.handle("backend.backup", async (event): Promise<BackendResponse> => {
 		es.onmessage = (ev) => {
 			try {
 				const data = JSON.parse(ev.data) as BackupStreamedResponse;
-				event.sender.send("backendApi.backup:update", data);
+				event.sender.send("backend.backup:update", data);
 			} catch {
 				// Malformed data received from SSE
 			}

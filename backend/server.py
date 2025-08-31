@@ -5,7 +5,7 @@ import shutil
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Literal
+from typing import Any, AsyncGenerator, Callable, Generator, Literal
 from uuid import uuid4
 
 import file_tools
@@ -197,11 +197,16 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
         yield format_yield(BackupYield(log=LogEntry(content="Complete!", type="success"), progress=1))
         yield yield_complete()
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    async def push_events(generator: Callable[[], AsyncGenerator[str, None]]):
+        async for y in generator():
+            yield y
+            await asyncio.sleep(0)  # Flush yielded data to uvicorn
+
+    return StreamingResponse(push_events(event_generator), media_type="text/event-stream")
 
 
 async def main():
-    PORT = os.getenv("PORT")
+    PORT = os.getenv("PORT", "8000")
     if PORT is None:
         raise RuntimeError("PORT is required but not set.")
     try:

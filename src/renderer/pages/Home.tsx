@@ -32,6 +32,8 @@ export default function Home() {
 	const [logs, setLogs] = useState<LogEntry[]>([]);
 
 	async function refreshDevices() {
+		if (isRunning) return;
+
 		setRefreshingDevices(true);
 		const res = await backendApi.getDevices();
 
@@ -112,6 +114,7 @@ export default function Home() {
 										<Select
 											value={userConfig.adbDevice}
 											onValueChange={(selected) => updateUserConfig({ adbDevice: selected })}
+											disabled={isRunning}
 										>
 											<SelectTrigger className="flex-1">
 												<SelectValue placeholder={"Select device"} />
@@ -147,7 +150,12 @@ export default function Home() {
 												)}
 											</SelectContent>
 										</Select>
-										<Button variant="outline" size="icon" onClick={refreshDevices} disabled={refreshingDevices}>
+										<Button
+											variant="outline"
+											size="icon"
+											onClick={refreshDevices}
+											disabled={isRunning || refreshingDevices}
+										>
 											<RefreshCw className={`h-4 w-4 ${refreshingDevices && "animate-spin"}`} />
 										</Button>
 									</div>
@@ -160,8 +168,9 @@ export default function Home() {
 												placeholder="D:\Photos\Phone"
 												value={userConfig.destinationPath}
 												onChange={(e) => updateUserConfig({ destinationPath: e.target.value })}
+												disabled={isRunning}
 											/>
-											<Button variant="outline" size="icon" onClick={selectFolder}>
+											<Button variant="outline" size="icon" onClick={selectFolder} disabled={isRunning}>
 												<FolderOpen className="h-4 w-4" />
 											</Button>
 										</div>
