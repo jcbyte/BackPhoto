@@ -67,12 +67,12 @@ export async function startPythonServer(): Promise<void> {
 		py.stdout.on("data", waitForStart);
 
 		py.on("error", (err: any) => {
-			console.error(`Python server error: ${err}`);
+			console.error(`Python server produced error: ${err}`);
 			reject();
 		});
 
 		py.on("exit", (code: any) => {
-			console.log(`Python server exited, code: ${code}`);
+			console.log(`Python server exited with code ${code}`);
 		});
 	});
 }
@@ -97,12 +97,12 @@ export async function startAdbServer(): Promise<void> {
 		}
 
 		adb.on("error", (err: any) => {
-			console.error(`ADB start-server error: ${err}`);
+			console.error(`ADB start-server produced error: ${err}`);
 			reject();
 		});
 
 		adb.on("exit", (code: any) => {
-			console.log(`ADB start-server exited, code: ${code}`);
+			console.log(`ADB start-server exited with code ${code}`);
 			resolve();
 		});
 	});
@@ -121,12 +121,12 @@ export async function killAdbServer(port: number): Promise<void> {
 		}
 
 		adb.on("error", (err: any) => {
-			console.error(`ADB kill-server error: ${err}`);
+			console.error(`ADB kill-server produced error: ${err}`);
 			reject();
 		});
 
 		adb.on("exit", (code: any) => {
-			console.log(`ADB kill-server exited, code: ${code}`);
+			console.log(`ADB kill-server exited with code ${code}`);
 			adbPort = null;
 			resolve();
 		});
@@ -138,7 +138,18 @@ ipcMain.handle("serverManager.startADB", async (_event) => {
 });
 
 // Kill servers when Electron quits
-app.on("before-quit", () => {
-	if (py) py.kill();
-	if (adbPort) killAdbServer(adbPort);
+let isClean = false;
+app.on("before-quit", async (event) => {
+	async function cleanup() {
+		if (py) py.kill();
+		if (adbPort) await killAdbServer(adbPort);
+	}
+
+	if (!isClean) {
+		event.preventDefault();
+		cleanup().then(() => {
+			isClean = true;
+			app.quit();
+		});
+	}
 });
