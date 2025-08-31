@@ -1,7 +1,11 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { app, ipcMain } from "electron";
 import getPort from "get-port";
+import path from "path";
 import { DEV } from "../main";
+
+const PYTHON_PATH = DEV ? "./backend/server.py" : path.join(process.resourcesPath, "dist", "backend", "server");
+const ADB_PATH = DEV ? "./dist/adb/adb" : path.join(process.resourcesPath, "dist", "adb", "adb");
 
 let py: ChildProcessWithoutNullStreams | null = null;
 let pyPort: number | null = null;
@@ -30,13 +34,12 @@ function logStd(label: string, buf: Buffer) {
 export async function startPythonServer(): Promise<void> {
 	if (py) py.kill();
 
-	// todo need to run not in dev mode
-	const pyPath = "./backend/server.py";
-
 	pyPort = await getPort({ host: "127.0.0.1" });
 
 	return new Promise((resolve, reject) => {
-		py = spawn("python", [pyPath], { env: { PORT: String(pyPort), ...(DEV && { DEV: "true" }) } });
+		py = spawn(DEV ? "python" : PYTHON_PATH, DEV ? [PYTHON_PATH] : [], {
+			env: { PORT: String(pyPort), ...(DEV && { DEV: "true" }) },
+		});
 
 		if (DEV) {
 			py.stdout.on("data", (data: Buffer) => logStd("PYTHON STDOUT", data));

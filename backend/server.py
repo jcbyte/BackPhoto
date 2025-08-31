@@ -206,7 +206,7 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
 
 
 async def main():
-    PORT = os.getenv("PORT", "8000")
+    PORT = os.getenv("PORT")
     if PORT is None:
         raise RuntimeError("PORT is required but not set.")
     try:

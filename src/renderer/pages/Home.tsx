@@ -54,10 +54,10 @@ export default function Home({
 	}
 
 	useEffect(() => {
-		let refreshInterval: number | null = null;
+		let refreshInterval: NodeJS.Timeout | null = null;
 		if (!isRunning) {
 			refreshDevices();
-			const refreshInterval = setInterval(refreshDevices, 2000);
+			refreshInterval = setInterval(refreshDevices, 2000);
 		}
 
 		return () => {

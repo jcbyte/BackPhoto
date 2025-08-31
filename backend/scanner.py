@@ -118,6 +118,7 @@ def scan_device(location: Path, adb: ADB, config: UserConfig) -> Generator[Backu
         yield from scan_folder(root, config, location)
     except:
         if adb.is_alive():
+            # ! ppadb sometimes doesn't throw when it is pulling a file and the device disconnects leaving us hanging.
             raise Exception("ADB device was disconnected")
         else:
             raise HTTPException(status_code=ADB_NO_CONNECTION, detail="Could not connect to ADB server")
