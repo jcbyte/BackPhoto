@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { EventSource } from "eventsource";
-import { getBackendHost } from "./serverManager";
+import { getAdbPort, getBackendHost } from "./serverManager";
 import { getUserConfig } from "./storage";
 
 export type BackendSuccessResponse<T = void> = { ok: true } & (T extends void ? {} : { data: T });
@@ -33,10 +33,14 @@ export interface BackupError {
 
 ipcMain.handle("backend.connectToADB", async (_event): Promise<BackendResponse> => {
 	const apiUrl = getBackendHost();
-	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was tha backend started?", backendError: "backend" };
+	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was the backend started?", backendError: "backend" };
+
+	const adbPort = getAdbPort();
+	if (!adbPort) return { ok: false, detail: "Unknown adb port - Was the ADB server started?", backendError: "adb" };
 
 	try {
-		const res = await fetch(`${apiUrl}/connect`, { method: "POST" });
+		const params = new URLSearchParams({ port: String(adbPort) });
+		const res = await fetch(`${apiUrl}/connect?${params.toString()}`, { method: "POST" });
 
 		if (!res.ok) {
 			const data = (await res.json().catch(() => ({}))) as BackendApiError; // `catch` fallback if JSON invalid

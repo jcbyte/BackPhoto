@@ -201,7 +201,15 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
 
 
 async def main():
-    config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="info", reload=DEV)
+    PORT = os.getenv("PORT")
+    if PORT is None:
+        raise RuntimeError("PORT is required but not set.")
+    try:
+        PORT = int(PORT)
+    except ValueError:
+        raise ValueError(f"Invalid PORT value: {PORT}.")
+
+    config = uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="info", reload=DEV)
     server = uvicorn.Server(config)
 
     server_task = asyncio.create_task(server.serve())

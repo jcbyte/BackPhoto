@@ -13,7 +13,7 @@ if (require("electron-squirrel-startup")) {
 
 import "./api/backend";
 import "./api/electron";
-import { startPythonServer } from "./api/serverManager";
+import { startAdbServer, startPythonServer } from "./api/serverManager";
 import "./api/storage";
 
 const createWindow = async () => {
@@ -38,6 +38,7 @@ const createWindow = async () => {
 	}
 
 	await startPythonServer();
+	await startAdbServer();
 };
 
 // This method will be called when Electron has finished
