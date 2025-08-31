@@ -1,3 +1,5 @@
+import { AdbDevice } from "@/../electron/api/backend";
+import { LogEntry } from "@/components/LogItem";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { useBackendRunning } from "@/hooks/BackendRunningProvider";
@@ -12,19 +14,85 @@ import { useState } from "react";
 type Tab = "home" | "options";
 interface TabConfig {
 	icon: LucideIcon;
-	component: React.FC;
 }
 const TAB_CONFIG: Record<Tab, TabConfig> = {
-	home: { icon: HomeIcon, component: Home },
-	options: { icon: SettingsIcon, component: Options },
+	home: { icon: HomeIcon },
+	options: { icon: SettingsIcon },
 };
 
 export default function App() {
-	const { isLoading: backendLoading, backendRunning } = useBackendRunning();
+	const { isLoading: backendLoading, backendRunning, markBackendDown } = useBackendRunning();
 	const { theme, setTheme } = useTheme();
 
 	const [activeTab, setActiveTab] = useState<Tab>("home");
-	const ActiveComponent = TAB_CONFIG[activeTab].component;
+
+	const [isRunning, setIsRunning] = useState(false);
+	const [progress, setProgress] = useState(0);
+	const [logs, setLogs] = useState<LogEntry[]>([]);
+
+	function addLog(log: Omit<LogEntry, "timestamp"> & { timestamp?: number }) {
+		if (!log.timestamp) {
+			log.timestamp = Date.now() / 1000;
+		}
+		setLogs((prev) => [log as LogEntry, ...prev]);
+	}
+
+	async function callBackup() {
+		setIsRunning(true);
+		setProgress(0);
+
+		const res = await backendApi.backup((update) => {
+			if (update.progress) setProgress(update.progress);
+			if (update.log) addLog(update.log);
+		});
+
+		if (!res.ok) {
+			if (res.backendError) {
+				markBackendDown();
+			}
+
+			addLog({ content: res.detail, type: "error" });
+		} else {
+			setProgress(1);
+		}
+
+		setIsRunning(false);
+	}
+
+	const [devices, setDevices] = useState<AdbDevice[]>([]);
+
+	async function refreshDevices() {
+		const res = await backendApi.getDevices();
+
+		if (!res.ok) {
+			if (res.backendError) {
+				markBackendDown();
+			}
+
+			addLog({ content: res.detail, type: "error" });
+			return;
+		}
+
+		setDevices(res.data);
+	}
+
+	const activePage = (() => {
+		switch (activeTab) {
+			case "home":
+				return (
+					<Home
+						isRunning={isRunning}
+						backup={callBackup}
+						logs={logs}
+						progress={progress}
+						devices={devices}
+						refreshDevices={refreshDevices}
+					/>
+				);
+			case "options":
+				return <Options />;
+		}
+	})();
 
 	if (backendLoading) {
 		return (
@@ -65,9 +133,7 @@ export default function App() {
 							</Button>
 						</div>
 
-						<div className="flex-1 h-screen overflow-y-auto">
-							<ActiveComponent />
-						</div>
+						<div className="flex-1 h-screen overflow-y-auto">{activePage}</div>
 					</div>
 				) : (
 					<BackendNotRunning />

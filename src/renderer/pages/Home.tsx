@@ -1,4 +1,4 @@
-import { type AdbDevice } from "@/../electron/api/backend";
+import { AdbDevice } from "@/../electron/api/backend";
 import LogItem, { type LogEntry } from "@/components/LogItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useBackendRunning } from "@/hooks/BackendRunningProvider";
 import { useUserConfig } from "@/hooks/UserConfigProvider";
 import {
 	CircleAlertIcon,
@@ -20,34 +19,31 @@ import {
 import { useEffect, useState } from "react";
 import Loading from "./Loading";
 
-export default function Home() {
-	const { markBackendDown } = useBackendRunning();
+export default function Home({
+	isRunning,
+	backup,
+	logs,
+	progress,
+	devices,
+	refreshDevices,
+}: {
+	isRunning: boolean;
+	backup: () => void;
+	logs: LogEntry[];
+	progress: number;
+	devices: AdbDevice[];
+	refreshDevices: () => Promise<void>;
+}) {
 	const { userConfig, updateUserConfig } = useUserConfig();
 
-	const [devices, setDevices] = useState<AdbDevice[]>([]);
 	const [refreshingDevices, setRefreshingDevices] = useState<boolean>(false);
 
-	const [isRunning, setIsRunning] = useState(false);
-	const [progress, setProgress] = useState(0);
-	const [logs, setLogs] = useState<LogEntry[]>([]);
-
-	async function refreshDevices() {
+	async function handleRefreshDevices() {
 		if (isRunning) return;
 
 		setRefreshingDevices(true);
-		const res = await backendApi.getDevices();
-
-		if (!res.ok) {
-			if (res.backendError) {
-				markBackendDown();
-			}
-
-			addLog({ content: res.detail, type: "error" });
-			return;
-		}
-
+		await refreshDevices();
 		setRefreshingDevices(false);
-		setDevices(res.data);
 	}
 
 	async function selectFolder() {
@@ -57,36 +53,17 @@ export default function Home() {
 		updateUserConfig({ destinationPath: folderPath });
 	}
 
-	function addLog(log: Omit<LogEntry, "timestamp"> & { timestamp?: number }) {
-		if (!log.timestamp) {
-			log.timestamp = Date.now() / 1000;
-		}
-		setLogs((prev) => [log as LogEntry, ...prev]);
-	}
-
-	async function backup() {
-		setIsRunning(true);
-		setProgress(0);
-
-		const res = await backendApi.backup((update) => {
-			if (update.progress) setProgress(update.progress);
-			if (update.log) addLog(update.log);
-		});
-
-		if (!res.ok) {
-			if (res.backendError) {
-				markBackendDown();
-			}
-
-			addLog({ content: res.detail, type: "error" });
-		}
-
-		setIsRunning(false);
-	}
-
 	useEffect(() => {
-		refreshDevices();
-	}, []);
+		let refreshInterval: number | null = null;
+		if (!isRunning) {
+			refreshDevices();
+			const refreshInterval = setInterval(refreshDevices, 2000);
+		}
+
+		return () => {
+			if (refreshInterval) clearInterval(refreshInterval);
+		};
+	}, [isRunning]);
 
 	if (!userConfig) {
 		return <Loading />;
@@ -153,7 +130,7 @@ export default function Home() {
 										<Button
 											variant="outline"
 											size="icon"
-											onClick={refreshDevices}
+											onClick={handleRefreshDevices}
 											disabled={isRunning || refreshingDevices}
 										>
 											<RefreshCw className={`h-4 w-4 ${refreshingDevices && "animate-spin"}`} />
