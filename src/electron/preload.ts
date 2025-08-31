@@ -5,25 +5,15 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { AdbDevice, BackendResponse, BackupStreamedResponse } from "./api/backend";
 import type { UserConfig } from "./api/storage";
 
-let appReady: boolean = false;
-let appReadyCallbacks: (() => void)[] = [];
-ipcRenderer.once("electron.onLoaded", () => {
-	appReady = true;
-
-	while (appReadyCallbacks.length > 0) {
-		appReadyCallbacks.pop()!();
-	}
-});
-
 contextBridge.exposeInMainWorld("serverManagerApi", {
 	startBackend: (): Promise<void> => ipcRenderer.invoke("serverManager.startBackend"),
 	startADB: (): Promise<void> => ipcRenderer.invoke("serverManager.startADB"),
 });
 
 contextBridge.exposeInMainWorld("electronApi", {
-	onLoaded: (callback: () => void): void => {
-		if (appReady) callback();
-		else appReadyCallbacks.push(callback);
+	onLoaded: async (callback: () => void): Promise<void> => {
+		if (await ipcRenderer.invoke("electron._isAppReady")) callback();
+		else ipcRenderer.once("electron._appReady", callback);
 	},
 	pickFolder: (): Promise<string | null> => ipcRenderer.invoke("electron.pickFolder"),
 });
