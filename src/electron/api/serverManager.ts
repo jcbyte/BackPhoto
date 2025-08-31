@@ -27,8 +27,6 @@ function logStd(label: string, buf: Buffer) {
 	console.log(lines.map((line) => `[${label}]: ${line}`).join("\n"));
 }
 
-const NODE_SERVER_READY_STRING = "NODE_READ_SERVER_READY";
-
 export async function startPythonServer(): Promise<void> {
 	if (py) py.kill();
 
@@ -46,6 +44,8 @@ export async function startPythonServer(): Promise<void> {
 		}
 
 		function waitForStart(data: Buffer) {
+			const NODE_SERVER_READY_STRING = "NODE_READ_SERVER_READY";
+
 			const lines = data
 				.toString()
 				.split("\n")
@@ -133,7 +133,11 @@ export async function killAdbServer(port: number): Promise<void> {
 	});
 }
 
-// Kill Python server when Electron quits
+ipcMain.handle("serverManager.startADB", async (_event) => {
+	await startAdbServer();
+});
+
+// Kill servers when Electron quits
 app.on("before-quit", () => {
 	if (py) py.kill();
 	if (adbPort) killAdbServer(adbPort);

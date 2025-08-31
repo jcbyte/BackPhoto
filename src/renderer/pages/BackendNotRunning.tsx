@@ -11,13 +11,13 @@ export default function BackendNotRunning() {
 
 	async function handleTryFix() {
 		setTryingFix(true);
+
 		const result = await tryFix();
-
-		// todo try fix
-
 		if (!result) {
 			toast.error("Unable to fix backend");
 		}
+		// If it is true then this page should disappear automatically
+
 		setTryingFix(false);
 	}
 

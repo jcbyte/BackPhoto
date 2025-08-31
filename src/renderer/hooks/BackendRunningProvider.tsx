@@ -1,3 +1,4 @@
+import { BackendResponse } from "@/../electron/api/backend";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface BackendRunningContextType {
@@ -24,19 +25,29 @@ export function BackendRunningProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	async function tryFix(): Promise<boolean> {
-		const res = await backendApi.connectToADB();
+		async function runFix(): Promise<boolean> {
+			let res: BackendResponse = await backendApi.connectToADB();
 
-		if (!res.ok) {
-			// todo try and fix
+			if (res.ok) return true;
+
 			if (res.backendError === "backend") {
 				await serverManagerApi.startBackend();
+				res = await backendApi.connectToADB(); // Call again to check if its now an adb error
+				if (res.ok) return true;
+			}
+
+			if (res.backendError === "adb") {
+				await serverManagerApi.startADB();
+				res = await backendApi.connectToADB();
+				if (res.ok) return true;
 			}
 
 			return false;
 		}
 
-		setBackendRunning(true);
-		return true;
+		const fixed = await runFix();
+		setBackendRunning(fixed);
+		return fixed;
 	}
 
 	function markBackendDown() {

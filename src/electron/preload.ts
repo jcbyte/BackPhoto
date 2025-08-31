@@ -7,6 +7,7 @@ import type { UserConfig } from "./api/storage";
 
 contextBridge.exposeInMainWorld("serverManagerApi", {
 	startBackend: (): Promise<void> => ipcRenderer.invoke("serverManager.startBackend"),
+	startADB: (): Promise<void> => ipcRenderer.invoke("serverManager.startADB"),
 });
 
 contextBridge.exposeInMainWorld("electronApi", {

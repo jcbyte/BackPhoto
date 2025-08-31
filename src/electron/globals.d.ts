@@ -4,6 +4,7 @@ import type { UserConfig } from "./api/storage";
 declare global {
 	namespace serverManagerApi {
 		function startBackend(): Promise<void>;
+		function startADB(): Promise<void>;
 	}
 
 	namespace electronApi {
