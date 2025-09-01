@@ -67,6 +67,7 @@ const config: ForgeConfig = {
 					owner: "jcbyte",
 					name: "BackPhoto",
 				},
+				draft: false,
 				prerelease: false,
 			},
 		},
