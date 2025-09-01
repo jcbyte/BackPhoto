@@ -23,7 +23,7 @@ function downloadFile(url, dest) {
 	return new Promise((resolve, reject) => {
 		const file = fs.createWriteStream(dest);
 
-		console.log(`Downloading file from: ${url}`);
+		console.log(`Downloading file: ${url}`);
 		https
 			.get(url, (response) => {
 				if (response.statusCode && response.statusCode >= 400) {

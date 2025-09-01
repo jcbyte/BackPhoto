@@ -1,7 +1,8 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { app, ipcMain } from "electron";
+import { ipcMain } from "electron";
 import getPort from "get-port";
 import path from "path";
+import treeKill from "tree-kill";
 import { DEV } from "../main";
 
 const PYTHON_PATH = DEV ? "./backend/server.py" : path.join(process.resourcesPath, "dist", "backend", "server");
@@ -32,7 +33,7 @@ function logStd(label: string, buf: Buffer) {
 }
 
 export async function startPythonServer(): Promise<void> {
-	if (py) py.kill();
+	await killPythonServer();
 
 	pyPort = await getPort({ host: "127.0.0.1" });
 
@@ -58,9 +59,6 @@ export async function startPythonServer(): Promise<void> {
 			for (let line of lines) {
 				// Resolve once the server is ready
 				if (line.startsWith(NODE_SERVER_READY_STRING)) {
-					// const lineData = line.replace(NODE_SERVER_READY_STRING, "").trim();
-					// const { host, port } = JSON.parse(lineData);
-					// pyHost = { hostname: host, port };
 					console.log("Python server started");
 					resolve();
 					py?.stdout.off("data", waitForStart);
@@ -69,13 +67,32 @@ export async function startPythonServer(): Promise<void> {
 		}
 		py.stdout.on("data", waitForStart);
 
-		py.on("error", (err: any) => {
+		py.once("error", (err: any) => {
 			console.error(`Python server produced error: ${err}`);
-			reject();
+			reject(err);
+		});
+	});
+}
+
+async function killPythonServer(): Promise<void> {
+	if (!py) return;
+	const process = py;
+
+	const processId = process.pid;
+	if (!processId) return;
+
+	return new Promise((resolve, reject) => {
+		process.once("exit", (code) => {
+			console.log(`Python server exited with code ${code}`);
+			resolve();
 		});
 
-		py.on("exit", (code: any) => {
-			console.log(`Python server exited with code ${code}`);
+		// process.kill();
+		treeKill(processId, (err) => {
+			if (err) {
+				console.error(`Python server produced error: ${err}`);
+				reject(err);
+			}
 		});
 	});
 }
@@ -85,7 +102,7 @@ ipcMain.handle("serverManager.startBackend", async (_event) => {
 });
 
 export async function startAdbServer(): Promise<void> {
-	if (adbPort) await killAdbServer(adbPort);
+	await killAdbServer();
 
 	adbPort = await getPort({ host: "127.0.0.1" });
 	return new Promise((resolve, reject) => {
@@ -96,33 +113,35 @@ export async function startAdbServer(): Promise<void> {
 			adb.stderr.on("data", (data: Buffer) => logStd("ADB-START STDERR", data));
 		}
 
-		adb.on("error", (err: any) => {
+		adb.once("error", (err: any) => {
 			console.error(`ADB start-server produced error: ${err}`);
 			reject();
 		});
 
-		adb.on("exit", (code: any) => {
+		adb.once("exit", (code: any) => {
 			console.log(`ADB start-server exited with code ${code}`);
 			resolve();
 		});
 	});
 }
 
-export async function killAdbServer(port: number): Promise<void> {
+async function killAdbServer(): Promise<void> {
+	if (!adbPort) return;
+
 	return new Promise((resolve, reject) => {
-		const adb = spawn(ADB_PATH, ["-P", String(port), "kill-server"], { env: {} });
+		const adb = spawn(ADB_PATH, ["-P", String(adbPort), "kill-server"], { env: {} });
 
 		if (DEV) {
 			adb.stdout.on("data", (data: Buffer) => logStd("ADB-KILL STDOUT", data));
 			adb.stderr.on("data", (data: Buffer) => logStd("ADB-KILL STDERR", data));
 		}
 
-		adb.on("error", (err: any) => {
+		adb.once("error", (err: any) => {
 			console.error(`ADB kill-server produced error: ${err}`);
 			reject();
 		});
 
-		adb.on("exit", (code: any) => {
+		adb.once("exit", (code: any) => {
 			console.log(`ADB kill-server exited with code ${code}`);
 			adbPort = null;
 			resolve();
@@ -134,19 +153,7 @@ ipcMain.handle("serverManager.startADB", async (_event) => {
 	await startAdbServer();
 });
 
-// Kill servers when Electron quits
-let isClean = false;
-app.on("before-quit", async (event) => {
-	async function cleanup() {
-		if (py) py.kill();
-		if (adbPort) await killAdbServer(adbPort);
-	}
-
-	if (!isClean) {
-		event.preventDefault();
-		cleanup().then(() => {
-			isClean = true;
-			app.quit();
-		});
-	}
-});
+export async function cleanup(): Promise<void> {
+	await killPythonServer();
+	await killAdbServer();
+}
