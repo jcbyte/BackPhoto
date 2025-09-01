@@ -5,7 +5,7 @@ import shutil
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Generator, Literal
+from typing import AsyncGenerator, Callable, Literal
 from uuid import uuid4
 
 import file_tools
@@ -32,7 +32,15 @@ class AppState(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    print("NODE_READ_SERVER_READY", flush=True)
+    yield
+    # Shutdown logic
+
+
+app = FastAPI(lifespan=lifespan)
 app.state.data = AppState()
 
 ADB_NOT_INITIALISED = 409
@@ -205,7 +213,12 @@ async def backup(jobId: str = Query("", description="ID given from `/backup/star
     return StreamingResponse(push_events(event_generator), media_type="text/event-stream")
 
 
-async def main():
+# @app.on_event("startup")
+# async def startup():
+#     print(f"NODE_READ_SERVER_READY", flush=True)
+
+
+def main():
     PORT = os.getenv("PORT")
     if PORT is None:
         raise RuntimeError("PORT is required but not set.")
@@ -217,18 +230,8 @@ async def main():
     config = uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="info", reload=DEV)
     server = uvicorn.Server(config)
 
-    server_task = asyncio.create_task(server.serve())
-
-    # Wait until server is started
-    while not server.started:
-        await asyncio.sleep(0.01)
-
-    for s in server.servers:
-        host, port = s.sockets[0].getsockname()
-        print(f"NODE_READ_SERVER_READY {json.dumps({"host":host, "port":port})}", flush=True)
-
-    await server_task
+    server.run()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
