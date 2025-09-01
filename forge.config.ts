@@ -14,12 +14,13 @@ const config: ForgeConfig = {
 	packagerConfig: {
 		asar: true,
 		extraResource: ["./dist", "./assets"],
+		icon: "./assets/icon",
 	},
 	rebuildConfig: {},
 	makers: [
 		new MakerSquirrel({
-			iconUrl: "https://raw.githubusercontent.com/jcbyte/BackPhoto/refs/heads/main/assets/icon.ico",
 			setupIcon: "./assets/icon.ico",
+			iconUrl: "https://raw.githubusercontent.com/jcbyte/BackPhoto/refs/heads/main/assets/icon.ico",
 		}),
 		new MakerZIP({}, ["darwin"]), // ! Untested on macos
 		new MakerDeb({
@@ -57,6 +58,18 @@ const config: ForgeConfig = {
 			[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
 			[FuseV1Options.OnlyLoadAppFromAsar]: true,
 		}),
+	],
+	publishers: [
+		{
+			name: "@electron-forge/publisher-github",
+			config: {
+				repository: {
+					owner: "jcbyte",
+					name: "BackPhoto",
+				},
+				prerelease: false,
+			},
+		},
 	],
 };
 

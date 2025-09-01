@@ -20,6 +20,7 @@
 		"name": "Joel Cutler",
 		"email": "joelcutler108@gmail.com"
 	},
+	"icon": "./assets/icon.png",
 	"license": "Apache-2.0",
 	"devDependencies": {
 		"@electron-forge/cli": "^7.8.3",
@@ -29,6 +30,7 @@
 		"@electron-forge/plugin-auto-unpack-natives": "^7.8.3",
 		"@electron-forge/plugin-fuses": "^7.8.3",
 		"@electron-forge/plugin-webpack": "^7.8.3",
+		"@electron-forge/publisher-github": "^7.8.3",
 		"@electron/fuses": "^1.8.0",
 		"@tailwindcss/postcss": "^4.1.12",
 		"@types/conf": "^2.1.0",
