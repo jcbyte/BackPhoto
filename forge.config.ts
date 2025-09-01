@@ -1,5 +1,4 @@
 import { MakerDeb } from "@electron-forge/maker-deb";
-import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { AutoUnpackNativesPlugin } from "@electron-forge/plugin-auto-unpack-natives";
@@ -14,18 +13,20 @@ import { rendererConfig } from "./webpack.renderer.config";
 const config: ForgeConfig = {
 	packagerConfig: {
 		asar: true,
-		extraResource: ["./dist", "./icon.png"],
+		extraResource: ["./dist", "./assets"],
 	},
 	rebuildConfig: {},
 	makers: [
 		new MakerSquirrel({
-			name: "BackPhoto",
-			iconUrl: "./icon.png",
-			setupIcon: "./icon.png",
+			iconUrl: "https://raw.githubusercontent.com/jcbyte/BackPhoto/refs/heads/main/assets/icon.ico",
+			setupIcon: "./assets/icon.ico",
 		}),
-		new MakerZIP({}, ["darwin"]),
-		new MakerRpm({}),
-		new MakerDeb({}),
+		new MakerZIP({}, ["darwin"]), // ! Untested on macos
+		new MakerDeb({
+			options: {
+				icon: "./assets/icon.png",
+			},
+		}),
 	],
 	plugins: [
 		new AutoUnpackNativesPlugin({}),

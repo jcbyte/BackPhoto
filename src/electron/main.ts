@@ -5,16 +5,17 @@ import path from "path";
 // whether you're running in development or production).
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require("electron-squirrel-startup")) {
+	app.quit();
+}
+
 export const DEV = !app.isPackaged;
 
 let appReady: boolean = false;
 export function isAppReady(): boolean {
 	return appReady;
-}
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require("electron-squirrel-startup")) {
-	app.quit();
 }
 
 import "./api/backend";
@@ -29,7 +30,9 @@ const createWindow = async () => {
 		height: 700,
 		minWidth: 704,
 		minHeight: 644,
-		icon: DEV ? "./icon.png" : path.join(process.resourcesPath, "icon.png"),
+		icon: DEV
+			? "./assets/icon.png"
+			: path.join(process.resourcesPath, "assets", process.platform === "win32" ? "icon.ico" : "icon.png"),
 		webPreferences: {
 			preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
 		},

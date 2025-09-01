@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserConfig } from "@/hooks/UserConfigProvider";
+import Loading from "@/pages/Loading";
 import {
 	CircleAlertIcon,
 	CircleCheckIcon,
@@ -17,7 +18,6 @@ import {
 	RefreshCw,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import Loading from "./Loading";
 
 export default function Home({
 	isRunning,
