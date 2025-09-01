@@ -1,41 +1,35 @@
-# <img src="icon.png" height="40"> &nbsp;BackPhoto
+# <img src="assets/icon.png" height="40"> &nbsp;BackPhoto
 
-Windows application for backing up photos from your **Android Device**.
+**BackPhoto** is an application for backing up photos from your **Android Device**.
 
 The app uses ADB and scans a connected device for specific files (based on their file extension), updates the EXIF information on photos to ensure the correct timestamp, then organises them into a destination folder.
 
 ## ADB Setup
 
-This app requires an ADB server running on `127.0.0.1:5037` (the default address).
-
-1. Install ADB on your system: [Guide for Windows, macOS, and Linux](https://www.xda-developers.com/install-adb-windows-macos-linux/)
-2. Start the ADB server by running `adb start-server`
-3. After you finish using the application, stop the ADB server with `adb kill-server`
+Ensure that **USB Debugging** is enabled on your device to use the App.  
+You can find instructions [here](https://developer.android.com/studio/debug/dev-options#Enable-debugging).
 
 ## Installation
 
-Precompiled binaries for **Windows** are are available in [Releases](https://github.com/jcbyte/backPhoto/releases).
+**Windows** installers are available in [Releases](https://github.com/jcbyte/backPhoto/releases).
+
+> Other operating systems are supported (however untested) and should be compiled from source.
 
 ## Run Locally
+
+This project is an [Electron Forge](https://www.electronforge.io/) project which runs a python backend for ADB operations.
 
 Install dependencies:
 
 ```bash
-pip install -r requirements.txt
+npm i
+pip install -r backend\requirements.txt
 ```
 
-Start local app:
+Start app:
 
 ```bash
-python app.py
-```
-
-## Build
-
-To create a standalone executable use `PyInstaller`:
-
-```bash
-pyinstaller --onefile --windowed --icon=icon.png app.py
+npm start
 ```
 
 ## Licence

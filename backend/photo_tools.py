@@ -1,10 +1,11 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Generator
 
 import piexif
 from PIL import Image
+from typings import BackupYield, LogEntry
 
 IMAGE_FORMAT = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".heif", ".heic", ".svg", ".ico"]
 
@@ -125,12 +126,11 @@ def set_exif_time(exif: dict[str, Any], time: datetime) -> None:
     exif["Exif"][piexif.ExifIFD.DateTimeOriginal] = time_str
 
 
-def set_photo_exif_time(file_path: Path, log: Callable[[str], None] | None = print) -> None:
+def set_photo_exif_time(file_path: Path) -> Generator[BackupYield, None, None]:
     """Sets the EXIF time of an image based on its file modification time.
 
     Args:
         file_path (Path): The file path of the image.
-        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
     ext = file_path.suffix.lower()
 
@@ -157,22 +157,25 @@ def set_photo_exif_time(file_path: Path, log: Callable[[str], None] | None = pri
             file_path = convert_to_jpg(file_path)
             save_exif(exif, file_path)
 
-        if log:
-            log(f'Updated: "{os.path.basename(file_path)}"')
+        yield BackupYield(log=LogEntry(content=f"Updated EXIF on {os.path.basename(file_path)}"))
 
     except:
-        if log:
-            log(f'Error: "{os.path.basename(file_path)}"')
+        yield BackupYield(log=LogEntry(content=f"Error updating EXIF on {os.path.basename(file_path)}", type="warning"))
 
 
-def set_photos_exif_time(folder_path: Path, log: Callable[[str], None] | None = print) -> None:
+def set_photos_exif_time(folder_path: Path) -> Generator[BackupYield, None, None]:
     """Sets or updates the EXIF time for all images in a folder.
 
     Args:
         folder_path (Path): The path to the folder containing images.
-        log (Callable[[str], None], optional): Logging function to display messages. Defaults to print.
     """
-    for file_path in folder_path.rglob("*"):
-        # skip directories
-        if file_path.is_file():
-            set_photo_exif_time(file_path, log)
+
+    # Iterate through every file in source directory
+    all_files = [f for f in folder_path.rglob("*") if f.is_file()]
+    total_file_count = len(all_files)
+
+    for i, file_path in enumerate(all_files):
+        yield from set_photo_exif_time(file_path)
+
+        if i % 20 == 0:
+            yield BackupYield(progress=((i + 1) / total_file_count))

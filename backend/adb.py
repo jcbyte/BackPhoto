@@ -8,19 +8,29 @@ from ppadb.device import Device as AdbDevice
 class Device:
     def __init__(self, device: AdbDevice) -> None:
         self.device = device
+        self._cached_friendly_name = None
 
     @property
     def serial(self) -> str:
         return self.device.serial
 
     @property
+    def authorised(self) -> bool:
+        try:
+            return self.device.get_state() == "device"
+        except:
+            return False
+
+    @property
     def friendly_name(self) -> str:
         """Get a user friendly name for the connected device."""
 
-        manufacturer = (self.device.shell("getprop ro.product.manufacturer") or "unknown").strip().title()
-        model = (self.device.shell("getprop ro.product.model") or "unknown").strip()
+        if self._cached_friendly_name is None:
+            manufacturer = (self.device.shell("getprop ro.product.manufacturer") or "unknown").strip().title()
+            model = (self.device.shell("getprop ro.product.model") or "unknown").strip()
+            self._cached_friendly_name = f"{manufacturer} {model}"
 
-        return f"{manufacturer} {model}"
+        return self._cached_friendly_name
 
     def shell(self, cmd: str) -> str | None:
         """Send a shell command to the device."""
@@ -121,5 +131,21 @@ class ADB:
     def __init__(self, host="127.0.0.1", port=5037) -> None:
         self.client = AdbClient(host=host, port=port)
 
+        self.client.version
+
+    def is_alive(self):
+        try:
+            self.client.version()
+            return True
+        except:
+            return False
+
     def get_devices(self) -> list[Device]:
         return [Device(adbDevice) for adbDevice in self.client.devices()]
+
+    def get_device(self, serial: str) -> Device | None:
+        device = self.client.device(serial)
+        if device:
+            return Device(device)
+
+        return None
