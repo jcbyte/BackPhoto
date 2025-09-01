@@ -32,7 +32,7 @@ export function getUserConfig(): UserConfig {
 	return config;
 }
 
-ipcMain.handle("storage.getConfig", (_event) => {
+ipcMain.handle("storage.getConfig", () => {
 	return getUserConfig();
 });
 

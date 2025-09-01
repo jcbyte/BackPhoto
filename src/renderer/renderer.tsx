@@ -36,7 +36,10 @@ import { UserConfigProvider } from "@/hooks/UserConfigProvider";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Cannot create React App - Root element not found");
+
+createRoot(rootElement).render(
 	<StrictMode>
 		<ThemeProvider defaultTheme="dark">
 			<BackendRunningProvider>
@@ -48,4 +51,4 @@ createRoot(document.getElementById("root")!).render(
 	</StrictMode>
 );
 
-console.log('👋 This message is being logged by "renderer.js", included via webpack');
+// console.log('👋 This message is being logged by "renderer.js", included via webpack');

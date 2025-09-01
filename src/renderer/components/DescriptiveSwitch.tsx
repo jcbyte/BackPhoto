@@ -2,7 +2,7 @@ import { Switch } from "@/components/ui/switch";
 
 export default function DescriptiveSwitch({
 	checked,
-	onChange = () => {},
+	onChange,
 	title,
 	description,
 }: {
@@ -12,7 +12,7 @@ export default function DescriptiveSwitch({
 	description?: string;
 }) {
 	return (
-		<div className="flex items-center gap-2" onClick={() => onChange(!checked)}>
+		<div className="flex items-center gap-2" onClick={onChange ? () => onChange(!checked) : undefined}>
 			<Switch checked={checked} />
 			<div className="flex flex-col">
 				<span className="text-sm font-medium">{title}</span>

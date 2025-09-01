@@ -3,7 +3,7 @@ import { EventSource } from "eventsource";
 import { getAdbPort, getBackendHost } from "./serverManager";
 import { getUserConfig } from "./storage";
 
-export type BackendSuccessResponse<T = void> = { ok: true } & (T extends void ? {} : { data: T });
+export type BackendSuccessResponse<T = void> = T extends void ? { ok: true } : { ok: true; data: T };
 export type BackendErrorResponse = { ok: false; detail: string; backendError?: "backend" | "adb" | "adbInit" };
 export type BackendResponse<T = void> = BackendSuccessResponse<T> | BackendErrorResponse;
 
@@ -31,7 +31,7 @@ export interface BackupError {
 	detail: string;
 }
 
-ipcMain.handle("backend.connectToADB", async (_event): Promise<BackendResponse> => {
+ipcMain.handle("backend.connectToADB", async (): Promise<BackendResponse> => {
 	const apiUrl = getBackendHost();
 	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was the backend started?", backendError: "backend" };
 
@@ -57,7 +57,7 @@ ipcMain.handle("backend.connectToADB", async (_event): Promise<BackendResponse> 
 	}
 });
 
-ipcMain.handle("backend.getDevices", async (_event): Promise<BackendResponse<AdbDevice[]>> => {
+ipcMain.handle("backend.getDevices", async (): Promise<BackendResponse<AdbDevice[]>> => {
 	const apiUrl = getBackendHost();
 	if (!apiUrl) return { ok: false, detail: "Unknown backend host - Was tha backend started?", backendError: "backend" };
 
@@ -146,12 +146,12 @@ ipcMain.handle("backend.backup", async (event): Promise<BackendResponse> => {
 			es.close();
 		});
 
-		es.addEventListener("backend-complete", (_ev) => {
+		es.addEventListener("backend-complete", () => {
 			resolve({ ok: true });
 			es.close();
 		});
 
-		es.onerror = (_ev) => {
+		es.onerror = () => {
 			resolve({ ok: false, detail: "Unknown error trying backup - Is the backend running?", backendError: "backend" });
 			es.close();
 		};

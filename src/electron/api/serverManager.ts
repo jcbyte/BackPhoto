@@ -56,7 +56,7 @@ export async function startPythonServer(): Promise<void> {
 				.map((line) => line.trim())
 				.filter((line) => line);
 
-			for (let line of lines) {
+			for (const line of lines) {
 				// Resolve once the server is ready
 				if (line.startsWith(NODE_SERVER_READY_STRING)) {
 					console.log("Python server started");
@@ -67,7 +67,7 @@ export async function startPythonServer(): Promise<void> {
 		}
 		py.stdout.on("data", waitForStart);
 
-		py.once("error", (err: any) => {
+		py.once("error", (err) => {
 			console.error(`Python server produced error: ${err}`);
 			reject(err);
 		});
@@ -97,7 +97,7 @@ async function killPythonServer(): Promise<void> {
 	});
 }
 
-ipcMain.handle("serverManager.startBackend", async (_event) => {
+ipcMain.handle("serverManager.startBackend", async () => {
 	await startPythonServer();
 });
 
@@ -113,12 +113,12 @@ export async function startAdbServer(): Promise<void> {
 			adb.stderr.on("data", (data: Buffer) => logStd("ADB-START STDERR", data));
 		}
 
-		adb.once("error", (err: any) => {
+		adb.once("error", (err) => {
 			console.error(`ADB start-server produced error: ${err}`);
 			reject();
 		});
 
-		adb.once("exit", (code: any) => {
+		adb.once("exit", (code) => {
 			console.log(`ADB start-server exited with code ${code}`);
 			resolve();
 		});
@@ -136,12 +136,12 @@ async function killAdbServer(): Promise<void> {
 			adb.stderr.on("data", (data: Buffer) => logStd("ADB-KILL STDERR", data));
 		}
 
-		adb.once("error", (err: any) => {
+		adb.once("error", (err) => {
 			console.error(`ADB kill-server produced error: ${err}`);
 			reject();
 		});
 
-		adb.once("exit", (code: any) => {
+		adb.once("exit", (code) => {
 			console.log(`ADB kill-server exited with code ${code}`);
 			adbPort = null;
 			resolve();
@@ -149,7 +149,7 @@ async function killAdbServer(): Promise<void> {
 	});
 }
 
-ipcMain.handle("serverManager.startADB", async (_event) => {
+ipcMain.handle("serverManager.startADB", async () => {
 	await startAdbServer();
 });
 

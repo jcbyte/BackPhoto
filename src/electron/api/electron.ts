@@ -1,7 +1,7 @@
 import { dialog, ipcMain } from "electron";
 import { isAppReady } from "../main";
 
-ipcMain.handle("electron.pickFolder", async (_event) => {
+ipcMain.handle("electron.pickFolder", async () => {
 	const result = await dialog.showOpenDialog({
 		properties: ["openDirectory"],
 	});
@@ -10,6 +10,6 @@ ipcMain.handle("electron.pickFolder", async (_event) => {
 	return result.filePaths[0]; // Returns the selected folder path
 });
 
-ipcMain.handle("electron._isAppReady", async (_event) => {
+ipcMain.handle("electron._isAppReady", async () => {
 	return isAppReady();
 });

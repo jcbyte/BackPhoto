@@ -13,7 +13,7 @@ if (require("electron-squirrel-startup")) {
 
 export const DEV = !app.isPackaged;
 
-let appReady: boolean = false;
+let appReady = false;
 export function isAppReady(): boolean {
 	return appReady;
 }

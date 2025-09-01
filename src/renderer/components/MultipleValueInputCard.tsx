@@ -11,8 +11,8 @@ export default function MultipleValueInputCard({
 	currentlyText,
 	Icon,
 	values,
-	onAddValue = () => true,
-	onRemoveValue = () => {},
+	onAddValue,
+	onRemoveValue,
 }: {
 	title: string;
 	subtitle?: string;
@@ -28,7 +28,7 @@ export default function MultipleValueInputCard({
 	const handleAdd = () => {
 		const formattedNewValue = newValue.trim();
 		if (!formattedNewValue) return;
-		if (onAddValue(formattedNewValue)) setNewValue("");
+		if (onAddValue && onAddValue(formattedNewValue)) setNewValue("");
 	};
 
 	return (
@@ -71,7 +71,7 @@ export default function MultipleValueInputCard({
 								variant="ghost"
 								size="icon"
 								className="h-6 w-6 p-4 hover:!bg-destructive/20 hover:!text-destructive/80"
-								onClick={() => onRemoveValue(value)}
+								onClick={onRemoveValue ? () => onRemoveValue(value) : undefined}
 							>
 								<XIcon className="h-3 w-3" />
 							</Button>
